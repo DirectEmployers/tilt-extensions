@@ -1,0 +1,28 @@
+load("ext://uibutton", "cmd_button", "location")
+
+def pip_compile_button(
+        resource,
+        requirements,
+        dev_requirements=None,
+        exec_path=None,
+):
+    if not dev_requirements:
+        dev_requirements = ""
+
+    if not exec_path:
+        exec_path = f"deploy/{resource}"
+
+    cmd_button(
+        "pip-compile",
+        resource,
+        argv=[
+            "/bin/bash",
+            "-c",
+            "./compile-requirements.sh",
+            exec_path,
+            requirements,
+            dev_requirements,
+        ],
+        location=location.RESOURCE,
+        icon_name="build_circle",
+    )
