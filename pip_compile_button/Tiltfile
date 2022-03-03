@@ -1,5 +1,7 @@
 load("ext://uibutton", "cmd_button", "location")
 
+script_path = os.path.join(os.getcwd(), "compile-requirements.sh")
+
 def pip_compile_button(
         resource,
         requirements,
@@ -18,7 +20,7 @@ def pip_compile_button(
         argv=[
             "/bin/bash",
             "-c",
-            "./compile-requirements.sh",
+            script_path,
             exec_path,
             requirements,
             dev_requirements,
