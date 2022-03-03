@@ -10,7 +10,7 @@ def pip_compile_button(
         dev_requirements = ""
 
     if not exec_path:
-        exec_path = f"deploy/{resource}"
+        exec_path = "deploy/%s" % resource
 
     cmd_button(
         "pip-compile",
