@@ -13,7 +13,7 @@ compile_in()
   output=${input//.in/.txt}
 
   echo "Compiling ${input} -> ${output} ..."
-  kubectl exec "${exec_path}" -- pip-compile --quiet "${hash}" "${input}"
+  kubectl exec "${exec_path}" -- pip-compile --quiet "${input}"
 
   echo "Collect ${output} file locally..."
   kubectl exec "${exec_path}" -- cat "${output}" > "${output}"
