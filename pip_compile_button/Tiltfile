@@ -20,10 +20,7 @@ def pip_compile_button(
         argv=[
             "/bin/bash",
             "-c",
-            script_path,
-            exec_path,
-            requirements,
-            dev_requirements,
+            f"{script_path} {exec_path} {requirements} {dev_requirements}",
         ],
         location=location.RESOURCE,
         icon_name="build_circle",
