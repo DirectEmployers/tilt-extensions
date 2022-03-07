@@ -12,7 +12,7 @@ compile_in()
   input=$2
   output=${input//.in/.txt}
 
-  echo "Compiling ${input} -> ${output} ..."
+  echo "Compiling ${input}→${output}..."
   kubectl exec "${exec_path}" -- pip-compile --quiet "${input}"
 }
 
@@ -28,13 +28,12 @@ collect_txt()
 
 compile_in "${exec_path}" "${requirements}"
 if [[ $dev_requirements != "" ]]; then
-  echo
   compile_in "${exec_path}" "${dev_requirements}"
 fi
 
+echo
 collect_txt "${exec_path}" "${requirements}"
 if [[ $dev_requirements != "" ]]; then
-  echo
   collect_txt "${exec_path}" "${dev_requirements}"
 fi
 
