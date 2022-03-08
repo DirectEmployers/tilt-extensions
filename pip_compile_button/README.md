@@ -7,9 +7,19 @@ After importing the repo and extension (see main readme), you can invoke the ext
 
 ```skylark
 pip_compile_button(
-    "resource-name",  # Tilt resource to add button to
-    "requirements.in",  # Main requirements file
-    "requirements-dev.in",  # Optional, dev requirements file
-    "exec_path",  # Optional, use if different than 'deploy/resource-name'
+    # Tilt resource to add button to
+    "resource-name",
+    
+    # Paths of requirements files to compile
+    requirements=[
+        "requirements.in",
+        "requirements-dev.in",
+    ],
+    
+    # Local Destination for compiled requirements
+    destination="./",
+    
+    # Optional, use if different than 'deploy/resource-name'
+    exec_path="exec_path",
 )
 ```
