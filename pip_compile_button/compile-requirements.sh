@@ -3,28 +3,21 @@
 set -e
 
 POSITIONAL_ARGS=()
+COMPILE_ARGS=()
+
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --cache-dir)
-      cache_dir="$2"
-      shift
-      shift
-      ;;
-    -v|--verbose)
-      verbose=true
-      shift
-      ;;
-    -q|--quiet)
-      quiet=true
-      shift
-      ;;
-    --generate-hashes)
-      generate_hashes=true
-      shift
-      ;;
     -*|--*)
-      echo "Unknown option $1"
-      exit 1
+      if [ -z "$2" ] || [[ $2 == -* ]]; then
+        COMPILE_ARGS+=("$1")
+        shift
+      fi
+
+      if [ ! -z "$2" ] && [[ $2 != -* ]]; then
+        COMPILE_ARGS+=("$1=$2")
+        shift
+        shift
+      fi
       ;;
     *)
       POSITIONAL_ARGS+=("$1")
@@ -44,6 +37,8 @@ requirements=$@
 compile_in()
 {
   exec_path=$1
+  compile_args=$2
+  shift
   shift
   inputs=("$@")
 
@@ -52,7 +47,7 @@ compile_in()
     output_name="${input_name//.in/.txt}"
     echo
     echo "Compiling ${input_name} → ${output_name}..."
-    kubectl exec "${exec_path}" -- pip-compile "${input}"
+    kubectl exec "${exec_path}" -- pip-compile ${compile_args[@]} "${input}"
   done
 }
 
@@ -74,7 +69,7 @@ collect_txt()
   done
 }
 
-compile_in "${exec_path}" ${requirements[@]}
+compile_in "${exec_path}" "${COMPILE_ARGS}" ${requirements[@]}
 collect_txt "${exec_path}" "${destination}" ${requirements[@]}
 echo
 echo "Requirement compilation complete."
