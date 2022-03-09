@@ -15,7 +15,7 @@ def pip_compile_button(
     if type(requirements) == type(list()):
         requirements= " ".join(requirements)
 
-    cmd = [script_path, exec_path, destination, requirements]
+    cmd = [shlex.quote(script_path), exec_path, destination, requirements]
     if type(compile_args) == type(list()):
         cmd+=compile_args
 
