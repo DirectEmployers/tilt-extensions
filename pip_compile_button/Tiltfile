@@ -25,7 +25,7 @@ def pip_compile_button(
         "pip-compile",
         resource,
         argv=[
-            "/bin/bash",
+            "bash",
             "-c",
             cmd_string,
         ],
