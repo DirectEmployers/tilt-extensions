@@ -47,10 +47,22 @@ compile_in()
   # Additional pip-compile arguments are passed in via $compile_args.
 
   exec_path=$1
-  compile_args=$2
   shift
-  shift
-  inputs=("$@")
+
+  compile_args=()
+  inputs=()
+  while [[ $# -gt 0 ]]; do
+    case $1 in
+      -*|--*)
+        compile_args+=("$1")
+        shift
+        ;;
+      *)
+        inputs+=("$1")
+        shift
+        ;;
+    esac
+  done
 
   for input in "${inputs[@]}"; do
     # Get filename only.
@@ -93,7 +105,7 @@ collect_txt()
 }
 
 # Compile and then save results to local filesystem.
-compile_in "${exec_path}" "${COMPILE_ARGS}" ${requirements[@]}
+compile_in "${exec_path}" ${COMPILE_ARGS[@]} ${requirements[@]}
 collect_txt "${exec_path}" "${destination}" ${requirements[@]}
 echo
 echo "Requirement compilation complete."
