@@ -22,7 +22,7 @@ def pip_compile_button(
     cmd_string = " ".join(cmd)
 
     cmd_button(
-        "pip-compile",
+        "pip-compile:" + resource,
         resource,
         argv=[
             "bash",
