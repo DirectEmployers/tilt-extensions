@@ -32,11 +32,13 @@ set -- "${POSITIONAL_ARGS[@]}"
 
 # Get kubectl exec resource name or path.
 exec_path=$1
+container=$2
 
 # Get local destination path for compiled requirements files.
-destination=$2
+destination=$3
 
 # Shift previous two arguments and treat remaining as requirements file names.
+shift
 shift
 shift
 requirements=$@
@@ -47,6 +49,8 @@ compile_in()
   # Additional pip-compile arguments are passed in via $compile_args.
 
   exec_path=$1
+  container=$2
+  shift
   shift
 
   compile_args=()
@@ -73,7 +77,7 @@ compile_in()
 
     echo
     echo "Compiling ${input_name} → ${output_name}..."
-    kubectl exec "${exec_path}" -- pip-compile ${compile_args[@]} "${input}"
+    kubectl exec "${exec_path}" -c "${container}" -- pip-compile ${compile_args[@]} "${input}"
   done
 }
 
@@ -83,7 +87,9 @@ collect_txt()
   # to local destination path ($compiled_dest).
 
   exec_path=$1
-  compiled_dest=$2
+  container=$2
+  compiled_dest=$3
+  shift
   shift
   shift
   inputs=("$@")
@@ -100,12 +106,12 @@ collect_txt()
 
     echo
     echo "Collect ${o_name} file locally..."
-    kubectl exec "${exec_path}" -- cat "${output}" > "${o_dest}"
+    kubectl exec "${exec_path}" -c "${container}" -- cat "${output}" > "${o_dest}"
   done
 }
 
 # Compile and then save results to local filesystem.
-compile_in "${exec_path}" ${COMPILE_ARGS[@]} ${requirements[@]}
-collect_txt "${exec_path}" "${destination}" ${requirements[@]}
+compile_in "${exec_path}" "${container}" ${COMPILE_ARGS[@]} ${requirements[@]}
+collect_txt "${exec_path}" "${container}" "${destination}" ${requirements[@]}
 echo
 echo "Requirement compilation complete."
