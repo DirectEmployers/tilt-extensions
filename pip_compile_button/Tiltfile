@@ -28,6 +28,7 @@ def pip_compile_button(
     cmd_button(
         "pip-compile:" + resource,
         resource,
+        text="Compile Pip Requirements",
         argv=[
             "bash",
             "-c",
