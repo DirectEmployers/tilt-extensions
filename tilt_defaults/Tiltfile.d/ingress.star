@@ -13,7 +13,7 @@ load("./cluster_discovery.star", "DOCKER_DESKTOP", "MINIKUBE")
 
 def setup_ingress(context):
     if context == MINIKUBE:
-        k8s_yaml("../k8s/ingressclass.yaml")
+        k8s_yaml("k8s/ingressclass.yaml")
         k8s_resource(new_name = "ingress-class", objects = ["nginx:ingressclass"], labels = "ingress")
         local_resource(
             "ingress-nginx-controller",
