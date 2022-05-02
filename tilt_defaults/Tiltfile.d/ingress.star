@@ -9,6 +9,7 @@ used to prevent race conditions when applying YAML that includes an ingress.
 
 load("ext://helm_remote", "helm_remote")
 load("ext://namespace", "namespace_create")
+load("./cluster_discovery.yaml", "DOCKER_DESKTOP", "MINIKUBE")
 
 def setup_ingress(context):
     if context == MINIKUBE:
