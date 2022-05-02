@@ -9,11 +9,11 @@ used to prevent race conditions when applying YAML that includes an ingress.
 
 load("ext://helm_remote", "helm_remote")
 load("ext://namespace", "namespace_create")
-load("./cluster_discovery.yaml", "DOCKER_DESKTOP", "MINIKUBE")
+load("./cluster_discovery.star", "DOCKER_DESKTOP", "MINIKUBE")
 
 def setup_ingress(context):
     if context == MINIKUBE:
-        k8s_yaml("k8s/ingressclass.yaml")
+        k8s_yaml("../k8s/ingressclass.yaml")
         k8s_resource(new_name = "ingress-class", objects = ["nginx:ingressclass"], labels = "ingress")
         local_resource(
             "ingress-nginx-controller",
