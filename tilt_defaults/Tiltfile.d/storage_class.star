@@ -4,7 +4,7 @@ Stores cluster-specific StorageClass defaults, then performs a simple healthchec
 on it that can be referenced by other Tilt workloads that require a StorageClass.
 """
 
-load("./cluster_discovery.yaml", "MINIKUBE")
+load("./cluster_discovery.star", "MINIKUBE")
 
 def setup_storage_class(context):
     sc_name = "standard"
