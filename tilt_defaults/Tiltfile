@@ -1,0 +1,12 @@
+"""Some sensible defaults and tools to provide a more consistent experience across clusters."""
+
+load_dynamic("./docker_prune.bzl")
+
+local_dev = load("./local_dev_yaml.bzl", "local_dev")
+
+context = load("./cluster_discovery.bzl", "context")
+setup_storage_class = load("./storage_class.bzl", "setup_storage_class")
+setup_ingress = load("./ingress.bzl", "setup_ingress")
+
+setup_storage_class(context)
+setup_ingress(context)
