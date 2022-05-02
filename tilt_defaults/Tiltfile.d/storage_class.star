@@ -31,5 +31,5 @@ def setup_storage_class(context):
                 "jsonpath='{.metadata.annotations.storageclass\\.kubernetes\\.io/is-default-class}'",
             ]),
         ),
-        labels = "background",
+        labels = "support",
     )

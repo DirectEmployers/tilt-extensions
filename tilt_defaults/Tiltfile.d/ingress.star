@@ -14,7 +14,11 @@ load("./cluster_discovery.star", "DOCKER_DESKTOP", "MINIKUBE")
 def setup_ingress(context):
     if context == MINIKUBE:
         k8s_yaml("k8s/ingressclass.yaml")
-        k8s_resource(new_name = "ingress-class", objects = ["nginx:ingressclass"], labels = "ingress")
+        k8s_resource(
+            new_name = "ingress-class",
+            objects = ["nginx:ingressclass"],
+            labels = "support",
+        )
         local_resource(
             "ingress-nginx-controller",
             serve_cmd = ["sleep", "infinity"],
@@ -34,7 +38,7 @@ def setup_ingress(context):
                     "ingress-nginx-controller",
                 ]),
             ),
-            labels = "ingress",
+            labels = "support",
         )
 
     if context == DOCKER_DESKTOP:
@@ -44,7 +48,11 @@ def setup_ingress(context):
             repo_url = "https://kubernetes.github.io/ingress-nginx",
             namespace = "ingress-nginx",
         )
-        k8s_resource(new_name = "ingress-class", objects = ["nginx:ingressclass"], labels = "ingress")
+        k8s_resource(
+            new_name = "ingress-class",
+            objects = ["nginx:ingressclass"],
+            labels = "support",
+        )
         k8s_resource(
             new_name = "ingress-nginx",
             objects = [
@@ -56,7 +64,7 @@ def setup_ingress(context):
                 "ingress-nginx:clusterrolebinding",
             ],
             resource_deps = ["ingress-class"],
-            labels = "ingress",
+            labels = "support",
         )
         k8s_resource(
             "ingress-nginx-admission-create",
@@ -69,7 +77,7 @@ def setup_ingress(context):
                 "ingress-nginx-admission:validatingwebhookconfiguration",
             ],
             resource_deps = ["ingress-nginx"],
-            labels = "ingress",
+            labels = "support",
         )
         k8s_resource(
             "ingress-nginx-admission-patch",
@@ -77,7 +85,7 @@ def setup_ingress(context):
                 "ingress-nginx",
                 "ingress-nginx-admission-create",
             ],
-            labels = "ingress",
+            labels = "support",
         )
         k8s_resource(
             "ingress-nginx-controller",
@@ -90,5 +98,5 @@ def setup_ingress(context):
                 "ingress-nginx-admission-create",
                 "ingress-nginx-admission-patch",
             ],
-            labels = "ingress",
+            labels = "support",
         )
