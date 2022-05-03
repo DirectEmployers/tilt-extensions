@@ -72,7 +72,7 @@ def tarfetch(
         (
             "(" +
             "kubectl exec -i -n {namespace} {k8s_object} -- " +
-            "tar -c -f - --directory={src_dir} {exclude} ." +
+            "tar -c -f --atime-preserve=system - --directory={src_dir} {exclude} ." +
             ") | " +
             "tar -x -f - {verbose} {keep_newer} --directory={target_dir} && " +
             "echo Done."
