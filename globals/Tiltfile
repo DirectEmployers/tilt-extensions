@@ -1,0 +1,58 @@
+"""Set, get, and merge globals using environment variables.
+
+Variables can be set as strings, lists, or dictionaries using as-needed JSON
+serialization and deserialization.
+"""
+
+DEFAULT_GLOBAL_PREFIX = "DE_TILT_GLOBALS"
+
+def is_type(obj, ref_obj):
+    """Test is `obj` if of the same type as `ref`.
+
+    For some reason Tilt/Starlark messes up type literals when they are passed
+    as arguments. To work around this, we're using a reference object to test
+    against instead.
+    """
+    return type(obj) == type(ref_obj)
+
+def get_global_prefix(prefix):
+    return os.gettenv("DE_TILT_GLOBALS__PREFIX", DEFAULT_GLOBAL_PREFIX)
+
+def set_global_prefix(prefix):
+    os.putenv("DE_TILT_GLOBALS__PREFIX", prefix)
+
+def get_global_key(key):
+    """Add global "DEVCORE" prefix when needed.
+
+    This helps to create namespaced environment variable names.
+    """
+    global_prefix = get_global_prefix()
+
+    key = key.upper()
+    if key.startswith(global_prefix):
+        return key
+    return "{}_{}".format(global_prefix, key)
+
+def get_global(key, default = None):
+    value = os.getenv(get_global_key(key), default)
+    if is_type(value, "") and value[0] in ("{", "["):
+        value = decode_json(value)
+    return value
+
+def set_global(key, value):
+    encoded_value = value if is_type(value, "") else encode_json(value)
+    os.putenv(get_global_key(key), encoded_value)
+    return value
+
+def merge_global(key, value, default = {}):
+    current = get_global(key, default)
+
+    if is_type(current, {}) and is_type(value, {}):
+        value = dict(current, **value)
+
+    if is_type(current, []) and is_type(value, []):
+        value = current + value
+    elif is_type(current, []):
+        value = current + [value]
+
+    return set_global(key, value)
