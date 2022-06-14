@@ -16,7 +16,7 @@ def is_type(obj, ref_obj):
     return type(obj) == type(ref_obj)
 
 def get_global_prefix():
-    return os.gettenv("DE_TILT_GLOBALS__PREFIX", DEFAULT_GLOBAL_PREFIX)
+    return os.getenv("DE_TILT_GLOBALS__PREFIX", DEFAULT_GLOBAL_PREFIX)
 
 def set_global_prefix(prefix):
     os.putenv("DE_TILT_GLOBALS__PREFIX", prefix)
