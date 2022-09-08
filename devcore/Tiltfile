@@ -3,9 +3,6 @@
 ROOT_PATH_ANNOTATION_KEY = "devctl.devcore.test/deproject-root"
 
 
-def devcore_has_loaded():
-
-
 def devcore_root_path():
     """Get the root path of the local devcore package."""
 
