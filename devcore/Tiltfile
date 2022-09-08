@@ -14,8 +14,8 @@ def devcore_root_path():
     )
 
     # Parse output and return path from resource annotation.
-    config = decode_json(output)
-    return config["metadata"]["annotations"][ROOT_PATH_ANNOTATION_KEY]
+    conf = decode_json(output)
+    return conf["metadata"]["annotations"][ROOT_PATH_ANNOTATION_KEY]
 
 
 def load_devcore():
@@ -25,6 +25,13 @@ def load_devcore():
     load_dynamic(devcore_tiltfile)
 
 
-def start_with_devcore():
-    """Start this project with Devcore."""
-    load_devcore()
+def start_with_devcore(tiltfile_path):
+    """Always start this project with Devcore.
+
+    This allows Devcore and its resources to be launched alongside a project when
+    `tilt up` is used within the project directory rather than the Devcore root.
+    """
+    caller_is_main_tiltfile = config.main_path == tiltfile_path
+
+    if caller_is_main_tiltfile:
+        load_devcore()
