@@ -1,0 +1,40 @@
+"""Allow Tiltfiles to start with Devcore resources and features available to it."""
+
+ROOT_PATH_ANNOTATION_KEY = "devctl.devcore.test/deproject-root"
+
+
+def devcore_has_loaded():
+
+
+def devcore_root_path():
+    """Get the root path of the local devcore package."""
+
+    # Get the Devcore deproject resource from the cluster.
+    output = local(
+        ["devctl", "get", "devcore"],
+        quiet = True,
+        echo_off = True,
+    )
+
+    # Parse output and return path from resource annotation.
+    config = decode_json(output)
+    return config["metadata"]["annotations"][ROOT_PATH_ANNOTATION_KEY]
+
+
+def load_devcore():
+    """Import the Devcore Tiltfile."""
+    devcore_path = devcore_root_path()
+    devcore_tiltfile = devcore_path + "/Tiltfile"
+    load_dynamic(devcore_tiltfile)
+
+
+def start_with_devcore(tiltfile_path):
+    """Always start this project with Devcore.
+
+    This allows Devcore and its resources to be launched alongside a project when
+    `tilt up` is used within the project directory rather than the Devcore root.
+    """
+    caller_is_main_tiltfile = config.main == tiltfile_path
+
+    if caller_is_main_tiltfile:
+        load_devcore()
