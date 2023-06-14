@@ -64,8 +64,14 @@ def tarfetch(
     if container:
         k8s_object = "{obj} -c {container}".format(obj=k8s_object, container=container)
 
-    target_dir_bat = target_dir.replace("/", "\\")
-    local(["mkdir", "-p", target_dir], command_bat="mkdir {} || ver>nul".format(target_dir_bat))
+    destination_path = os.path.realpath(target_dir)
+    if not os.path.exists(destination_path):
+        print("Preparing destination path for reverse sync:")
+        local(
+            ["mkdir", "-p", destination_path],
+            command_bat="mkdir {} || ver>nul".format(destination_path),
+            quiet = True,
+        )
 
     local_resource(
         name,
