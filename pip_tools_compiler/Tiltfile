@@ -1,0 +1,146 @@
+"""Run pip-compile in an existing image and save results to local file."""
+load("ext://uibutton", "cmd_button", "location")
+
+
+OUTPUT_FILE_FLAG = "--output-file"
+
+
+def tquote(token):
+    if token in [ "<", ">", "|", "&&", "||" ]:
+        return token
+    return shlex.quote(token)
+
+
+def rename_in_to_txt(filename):
+    """Rename *.in filename or path to *.txt."""
+    return filename.replace(".in", ".txt")
+
+
+def make_docker_run_cmd(image, requirements, output_file = None):
+    """Generate docker run command with volume mounts.
+
+    :param image: Docker image to run pip-compile from.
+    :param requirements: Local requirements file(s) (i.e. requirements.in).
+    :param output_file: Optional file to write compiled requirements to (for use
+           with pip-compile --output-file.
+    :return: list[str]
+    """
+    docker_run_cmd = [
+        "docker",
+        "run",
+        "--tty",
+        "--rm",
+        "--workdir",
+        "/tmp",
+    ]
+
+    for req_src in requirements:
+        req_mount = "%s:%s:ro" % (
+            os.path.abspath(req_src),
+            "/tmp/%s" % os.path.basename(req_src),
+        )
+        docker_run_cmd.extend(["--volume", req_mount])
+
+    if output_file:
+        comp_mount = "%s:%s:rw" % (
+            os.path.abspath(output_file),
+            "/tmp/%s" % os.path.basename(output_file),
+        )
+        docker_run_cmd.extend(["--volume", comp_mount])
+    else:
+        compiled_reqs = [rename_in_to_txt(s) for s in requirements]
+
+        for comp_src in compiled_reqs:
+            comp_mount = "%s:%s:rw" % (
+                os.path.abspath(comp_src),
+                "/tmp/%s" % os.path.basename(comp_src),
+            )
+            docker_run_cmd.extend(["--volume", comp_mount])
+
+    docker_run_cmd.extend([image, "sh", "-ec"])
+
+    return docker_run_cmd
+
+
+def make_pip_compile_cmd(requirements, options = None):
+    """Generate `pip-compile` command.
+
+    :param requirements: Local requirements file(s) (i.e. requirements.in).
+    :param options: Command options to pass to pip-compile.
+    :return: list[str]
+    """
+    if type(requirements) != type(list()):
+        requirements = [requirements]
+
+    src_reqs = [os.path.basename(r) for r in requirements]
+
+    compile_cmd = [ "cat" ]
+    compile_cmd.extend(src_reqs)
+
+    compile_cmd.extend([ "|", "pip-compile", "-", "--pip-args", "--progress-bar=off" ])
+
+    if options:
+        compile_cmd.extend(options)
+
+    return compile_cmd
+
+
+def pip_compile_button(
+        resource_name,
+        image,
+        requirements,
+        options = None,
+        install = False,
+):
+    if type(requirements) != type(list()):
+        requirements = [requirements]
+
+    output_file = None
+    if options:
+        for i, option in enumerate(options):
+            if option == OUTPUT_FILE_FLAG:
+                output_file = option
+                break
+            elif option.startswith("%s=" % OUTPUT_FILE_FLAG):
+                output_file = option.replace("%s=" % OUTPUT_FILE_FLAG, "")
+                break
+
+    # Get docker run command with appropriate file mounts for requirements.
+    docker_run = make_docker_run_cmd(image, requirements, output_file)
+
+    commands = [
+        # Setup virtual environment.
+        ["python", "-m", "venv", ".venv"],
+        ["source", ".venv/bin/activate"],
+    ]
+
+    if install:
+        # Attempt to install pip-tools.
+        commands.append([ "pip", "install", "--progress-bar=off", "pip-tools" ])
+
+    if options and "--output-file" in options:
+        # Run `pip-compile` on all input files and output the specified file.
+        commands.append(make_pip_compile_cmd(requirements, options))
+    else:
+        # Run `pip-compile` on each requirements file separately.
+        for req_src in requirements:
+            options.extend([OUTPUT_FILE_FLAG, "requirements.tmp"])
+            commands.append(make_pip_compile_cmd(req_src, options))
+            commands.append([ "cat", "requirements.tmp", ">", rename_in_to_txt(os.path.basename(req_src)) ])
+
+    # Let the user know that pip-compile operations have completed (it's not obvious).
+    commands.append([ "echo", "\nAll pip requirements have been compiled!" ])
+
+    # Chain commands together, to be run by `sh -c` in the container.
+    docker_run.append(
+        " && ".join([" ".join([tquote(t) for t in c]) for c in commands])
+    )
+
+    cmd_button(
+        "pip-compile:%s" % resource_name,
+        resource_name,
+        text = "pip-compile",
+        argv=docker_run,
+        location=location.RESOURCE,
+        icon_name="build_circle",
+    )
