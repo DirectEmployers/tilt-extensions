@@ -1,0 +1,25 @@
+load("../Tiltfile", "pip_compile_button")
+
+# Simple python:alpine container to add button to and run pip-compile.
+# docker_compose("./docker-compose.yaml")
+test_image = {
+    "services": {
+        "python-app": {
+            "image": "python:alpine"
+        }
+    }
+}
+docker_compose(encode_yaml(test_image))
+
+pip_compile_button(
+    "python-app",
+    image = "python:alpine",
+    requirements = ["./test-requirements.in"],
+    options = [
+        "--allow-unsafe",
+        "--generate-hashes",
+        "--resolver=backtracking",
+        "--verbose",
+    ],
+    install = True,
+)
