@@ -18,4 +18,5 @@ v1alpha1.extension(
 
 ## Extensions
 
-- [pip_compile_button](./pip_compile_button) - adds button use pip-compile on requirements in a given resource
+- [docker_build_remote](./docker_build_remote) - Checkout a remote Dockerfile from Git and build it.
+- [pip_compile_button](./pip_compile_button) - Add a pip-compile button to any Tilt resource.
