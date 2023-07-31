@@ -1,0 +1,53 @@
+load('ext://git_resource', 'git_checkout')
+
+
+def docker_build_remote(
+    ref,
+    repository_url,
+    context,
+    build_args = {},
+    dockerfile = 'Dockerfile',
+    dockerfile_contents = '',
+    live_update = [],
+    match_in_env_vars = False,
+    ignore = [],
+    only = [],
+    entrypoint = [],
+    target = '',
+    ssh = '',
+    network = '',
+    secret = [],
+    extra_tag = '',
+    container_args = [],
+    cache_from = [],
+    pull = False,
+    platform = '',
+):
+    """Checkout a remote Dockerfile from Git and build it."""
+    checkout_path = git_checkout(repository_url)
+
+    context = os.path.join(checkout_path, context)
+    kwargs = {
+        "build_args": build_args,
+        "live_update": live_update,
+        "match_in_env_vars": match_in_env_vars,
+        "ignore": ignore,
+        "only": only,
+        "entrypoint": entrypoint,
+        "target": target,
+        "ssh": ssh,
+        "network": network,
+        "secret": secret,
+        "extra_tag": extra_tag,
+        "container_args": container_args,
+        "cache_from": cache_from,
+        "pull": pull,
+        "platform": platform,
+    }
+
+    if dockerfile_contents:
+        kwargs["dockerfile_contents"] = dockerfile_contents
+    else:
+        kwargs["dockerfile"] = os.path.join(context, dockerfile)
+
+    docker_build(ref, context, **kwargs)
