@@ -3,6 +3,18 @@
 ROOT_PATH_ANNOTATION_KEY = "devctl.devcore.test/deproject-root"
 
 
+def tilt_port():
+    # Normalize args so that `--port xxx` and `--port=xxx` are both split.
+    args = [b for a in sys.argv for b in a.split("=")]
+
+    for i in range(len(args)):
+        if "--port" == args[i]:
+            return args[i + 1]
+
+    # Return default Tilt port.
+    return "10350"
+
+
 def devcore_root_path():
     """Get the root path of the local devcore package."""
 
