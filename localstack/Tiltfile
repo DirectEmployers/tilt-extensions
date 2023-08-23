@@ -1,0 +1,36 @@
+load("ext://helm_resource", "helm_repo", "helm_resource")
+load("ext://uibutton", "cmd_button")
+load("../devcore/Tiltfile", "tilt_port")
+
+
+def localstack_up():
+    # Pre-create persistent volume claim so Tilt doesn't destroy data.
+    k8s_yaml("k8s/pvc-localstack.yaml")
+    k8s_resource(
+        new_name="localstack-storage",
+        objects=["localstack:persistentvolumeclaim"],
+        labels="localstack",
+    )
+
+    # Install Localstack from Helm with Tilt-friendly values.yaml.
+    helm_repo("localstack-repo", "https://helm.localstack.cloud", labels="localstack")
+    helm_resource(
+        "localstack",
+        "localstack-repo/localstack",
+        resource_deps=[
+            "localstack-repo",
+            "localstack-storage"
+        ],
+        flags=["--values", "./values.yaml"],
+        labels="localstack",
+    )
+
+    reset_script = os.path.join(os.getcwd(), "scripts/reset-data.sh")
+    port = tilt_port()
+    cmd_button(
+        "localstack-state:reset",
+        argv=["sh", reset_script, port],
+        location=location.NAV,
+        icon_name="restart_alt",
+        text="Reset Localstack",
+    )

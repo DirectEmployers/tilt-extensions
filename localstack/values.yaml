@@ -1,0 +1,20 @@
+# Reference:
+# https://github.com/localstack/helm-charts/blob/main/charts/localstack/values.yaml
+
+image:
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  edgeService:
+    name: edge
+    targetPort: 4566
+    nodePort:
+  externalServicePorts:
+    start: 4510
+    end: 4560
+
+persistence:
+  enabled: true
+  # Using an existing PVC so we can annotate it
+  existingClaim: localstack
