@@ -4,9 +4,11 @@ Add a button to a resource to allow [pip-tools requirements](https://pip-tools.r
 
 ## Usage
 
-After importing the repo and extension (see [main README](../README.md)), you can invoke the extension using `pip_compile_button` in your Tiltfile.
+After registering the repo and extension (see [main README](../README.md)), you can invoke the extension using `pip_compile_button` in your Tiltfile.
 
-```python
+```starlark
+load("ext://pip_compile_button", "pip_compile_button")
+
 pip_compile_button(
     # Tilt resource to attach the button to.
     "resource-name",
