@@ -3,34 +3,60 @@ load("ext://uibutton", "cmd_button")
 load("../devcore/Tiltfile", "tilt_port")
 
 
-def localstack_up():
+def add_ui_buttons():
+    """Add UI Buttons to toggle Localstack and reset data."""
+    port = tilt_port()
+
+    reset_script = os.path.join(os.getcwd(), "scripts/reset.sh")
+    cmd_button(
+        "localstack:reset",
+        argv = ["sh", reset_script, port],
+        resource="localstack",
+        icon_name = "restart_alt",
+        text = "Reset Localstack",
+        requires_confirmation = True,
+    )
+
+    toggle_script = os.path.join(os.getcwd(), "scripts/toggle.sh")
+    icon = "cloud" if "localstack" in sys.argv or not sys.argv[2:] else "cloud_off"
+    cmd_button(
+        "localstack:toggle",
+        argv = ["sh", toggle_script, port],
+        location = "nav",
+        icon_name = icon,
+        text = "Toggle Localstack",
+    )
+
+
+def localstack_up(add_buttons = True):
+    """Deploy Localstack using Helm Chart."""
+
     # Pre-create persistent volume claim so Tilt doesn't destroy data.
     k8s_yaml("k8s/pvc-localstack.yaml")
     k8s_resource(
-        new_name="localstack-storage",
-        objects=["localstack:persistentvolumeclaim"],
-        labels="localstack",
+        new_name = "localstack-storage",
+        objects = ["localstack:persistentvolumeclaim"],
+        labels = "localstack",
+        trigger_mode=TRIGGER_MODE_AUTO,
     )
 
     # Install Localstack from Helm with Tilt-friendly values.yaml.
-    helm_repo("localstack-repo", "https://helm.localstack.cloud", labels="localstack")
+    helm_repo(
+        "localstack-repo",
+        "https://helm.localstack.cloud",
+        labels = "localstack",
+        trigger_mode=TRIGGER_MODE_AUTO,
+    )
     helm_resource(
         "localstack",
         "localstack-repo/localstack",
-        resource_deps=[
+        resource_deps = [
             "localstack-repo",
             "localstack-storage"
         ],
-        flags=["--values", "./values.yaml"],
-        labels="localstack",
+        flags = ["--values", "helm/values.yaml"],
+        labels = "localstack",
     )
 
-    reset_script = os.path.join(os.getcwd(), "scripts/reset-data.sh")
-    port = tilt_port()
-    cmd_button(
-        "localstack-state:reset",
-        argv=["sh", reset_script, port],
-        location=location.NAV,
-        icon_name="restart_alt",
-        text="Reset Localstack",
-    )
+    if add_buttons:
+        add_ui_buttons()
