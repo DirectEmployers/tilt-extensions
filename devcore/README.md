@@ -9,13 +9,14 @@ some other requirement.
 
 ## How to Use It
 
-First you'll need to import the DirectEmployers tilt-extensions repo in your project's Tiltfile.
+First you'll need to register the DirectEmployers tilt-extensions repo in your project's Tiltfile.
 
 ```starlark
 v1alpha1.extension_repo(
     name="de-tilt",
     url="https://github.com/DirectEmployers/tilt-extensions",
 )
+
 v1alpha1.extension(
     name = "devcore",
     repo_name = "de-tilt",

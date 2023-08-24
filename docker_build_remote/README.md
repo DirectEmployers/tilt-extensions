@@ -12,10 +12,12 @@ Builds upon the work of the [`git_resource`](https://github.com/tilt-dev/tilt-ex
 Tilt extention, which manages the `git checkout` behind the scenes (but sadly did not have a method to simply build 
 the Docker image without also creating a deployment for it).
 
-After importing the repo and extension (see [main README](../README.md)), you can invoke the extension using 
+After registering the repo and extension (see [main README](../README.md)), you can invoke the extension using 
 `docker_build_remote` in your Tiltfile.
 
-```python
+```starlark
+load("ext://docker_build_remote", "docker_build_remote")
+
 docker_build_remote(
     "postgres-dev",
     "git@github.com:postgis/docker-postgis.git",
