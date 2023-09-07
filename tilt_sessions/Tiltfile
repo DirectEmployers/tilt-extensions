@@ -4,16 +4,20 @@ SCRIPTS = os.path.join(os.getcwd(), "scripts")
 CONFIGMAP_NAME = "tilt-active-sessions"
 
 
-def current_port():
-    output = local(["sh", "-c", "echo $TILT_PORT"], quiet=True, echo_off=True)
+def cmd(command, quiet = True, command_bat = "", echo_off = True, env = {}, dir = "", stdin = ""):
+    output = local(command, quiet, command_bat, echo_off, env, dir, stdin)
     return str(output).strip()
+
+
+def current_port():
+    return cmd(["sh", "-c", "echo $TILT_PORT"])
 
 
 def get_session(port = None):
     if not port:
         port = current_port()
 
-    output = local(
+    output = cmd(
         [
             "tilt",
             "get",
@@ -22,9 +26,7 @@ def get_session(port = None):
             "--ignore-not-found",
             "--port=%s" % port,
             "--output=yaml",
-        ],
-        quiet=True,
-        echo_off=True,
+        ]
     )
 
     return decode_yaml(output) if output else {}
@@ -32,11 +34,13 @@ def get_session(port = None):
 
 def is_active(port = None):
     script = os.path.join(SCRIPTS, "verify-active.sh")
-    return bool(local([script, port]))
+    return bool(cmd([script, port]))
+
+
 
 
 def get_session_states():
-    existing_yaml = local(
+    existing_yaml = cmd(
         [
             "kubectl",
             "get",
@@ -45,12 +49,9 @@ def get_session_states():
             "--ignore-not-found",
             "--output",
             "yaml"
-        ],
-        quiet = True,
-        echo_off = True,
+        ]
     )
     configmap = decode_yaml(existing_yaml) if existing_yaml else {}
-
     return configmap.get("data", {})
 
 
@@ -95,7 +96,7 @@ def create_configmap():
         },
         "data": {},
     }
-    local(["kubectl", "apply", "-f", "-"], stdin = encode_yaml(configmap))
+    cmd(["kubectl", "apply", "-f", "-"], stdin = encode_yaml(configmap))
 
 
 def active_sessions():
