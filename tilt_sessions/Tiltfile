@@ -37,6 +37,19 @@ def is_active(port = None):
     return bool(cmd([script, port]))
 
 
+def configmap_exists():
+    output = cmd(
+        [
+            "kubectl",
+            "get",
+            "configmap",
+            CONFIGMAP_NAME,
+            "--ignore-not-found",
+            "--output",
+            "name"
+        ]
+    )
+    return output == CONFIGMAP_NAME
 
 
 def get_session_states():
@@ -102,7 +115,7 @@ def create_configmap():
 def active_sessions():
     sessions = get_session_states()
 
-    if not sessions:
+    if not configmap_exists():
         # Create the ConfigMap if it doesn't exist
         create_configmap()
 
