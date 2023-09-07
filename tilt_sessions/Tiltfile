@@ -82,18 +82,17 @@ def patch_configmap(op, port, value = ""):
     if op not in ["add", "remove"]:
         fail("Failed to patch ConfigMap: `op` argument must be one of (add, remove)")
 
-    return local(
+    value = "null" if op == "remove" else '"%s"' % value
+    return cmd(
         [
             "kubectl",
             "patch",
             "configmap",
             CONFIGMAP_NAME,
-            "--type=json",
+            "--type=merge",
             "--patch",
-            '[{"op": "%s", "path": "/data/%s", "value": %s}]' % (op, port, value),
-        ],
-        quiet=True,
-        echo_off=True,
+            '{"data": {"%s": %s}}' % (port, value),
+        ]
     )
 
 
