@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: datadog-dev
+data:
+  # Settings for datadog-agent:
+  DD_APM_ENABLED: &enabled "true"
+  DD_LOGS_ENABLED: *enabled
+  #
+  # Settings for ddtrace package:
+  DD_TRACE_ENABLED: *enabled
+  DD_LOGS_INJECTION: *enabled
+  #
+  # Settings for datadog package:
+  # NOTE: This is the opposite of the settings above!
+  DD_DOGSTATSD_DISABLE: "false"

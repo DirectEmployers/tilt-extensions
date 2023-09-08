@@ -1,0 +1,30 @@
+# Reference: https://github.com/DataDog/helm-charts/blob/main/charts/datadog/values.yaml
+targetSystem: linux
+datadog:
+  apiKeyExistingSecret: datadog-keys
+  appKeyExistingSecret: datadog-keys
+  collectEvents: true
+  logs:
+    enabled: true
+    containerCollectAll: true
+  apm:
+    portEnabled: true
+  kubelet:
+    tlsVerify: false
+  clusterAgent:
+    enabled: true
+    rbac:
+      create: true
+    env:
+      - name: "DD_ADMISSION_CONTROLLER_ADD_AKS_SELECTORS"
+        value: "true"
+  dogstatsd:
+    useHostPort: true
+  admissionController:
+    # clusterAgent.admissionController.enabled -- Enable the admissionController to be able to inject APM/Dogstatsd config and standard tags (env, service, version) automatically into your pods
+    enabled: true
+    remoteInstrumentation:
+      # clusterAgent.admissionController.remoteInstrumentation.enabled -- Enable polling and applying library injection using Remote Config.
+      ## This feature is in beta, and enables Remote Config in the Cluster Agent. It also requires Cluster Agent version 7.43+.
+      ## Enabling this feature grants the Cluster Agent the permissions to patch Deployment objects in the cluster.
+      enabled: true
