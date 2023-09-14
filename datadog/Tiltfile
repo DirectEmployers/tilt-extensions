@@ -66,8 +66,8 @@ def datadog_button():
 
     cmd_button(
         name = button_name,
-        argv = ["python", script, "boop"],
-        text = "Datadog",
+        argv = ["python", script, "remote"],
+        text = "Enable Datadog",
         location = location.NAV,
         icon_svg = icon_off,
         inputs = [
@@ -81,6 +81,11 @@ def datadog_button():
                 default = keys.get("app-key"),
                 label = "Enter a Datadog application key (https://app.datadoghq.com/organization-settings/application-keys)",
             ),
+            v1alpha1.ui_input_spec(
+                "DE_TILT_DATADOG_NAV_BTN",
+                label = "button_status",
+                hidden = v1alpha1.ui_hidden_input_spec("Disabled"),
+            )
         ],
     )
 
@@ -104,7 +109,7 @@ def helm_resources():
     helm_repo(
         "helm-datadog-repo",
         "https://helm.datadoghq.com",
-        labels = ["datadog", "helm"],
+        labels = ["datadog"],
     )
 
     chart_values = os.path.join(extension_path, "values.yaml")

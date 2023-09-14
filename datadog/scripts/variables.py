@@ -2,15 +2,24 @@ from pathlib import Path
 
 EXTENSION_PATH = Path(__file__).parents[1]
 
-EXTENSION_STATE_DISABLED = "Disabled"
-EXTENSION_STATE_ENABLED = "Enabled"
+ENABLED = "Enabled"
+DISABLED = "Disabled"
 
 K8S_CONFIGMAP_SESSIONS = "configmap/tilt-active-sessions"
 K8S_DEPLOYMENT_DATADOG = "deployment/datadog-cluster-agent"
 
-SVG_DISABLED = EXTENSION_PATH.joinpath("assets/datadog-disabled.svg")
-SVG_ENABLED = EXTENSION_PATH.joinpath("assets/datadog-enabled.svg")
-
 TILT_UIBUTTON_TOGGLE_DATADOG_AGENT = "uibutton/de-remote:toggle-datadog-agent"
 TILT_UIRESOURCE_DATADOG_AGENT = "uiresource/datadog-agent"
 TILT_UIRESOURCE_DATADOG_OPERATOR = "uiresource/datadog-operator"
+
+SVG_DD_ON = EXTENSION_PATH.joinpath("assets/datadog-enabled.svg")
+BUTTON_ENABLED_PATCH = [
+    {"op": "replace", "path": "/spec/text", "value": "Disable Datadog"},
+    {"op": "replace", "path": "/spec/iconSVG", "value": SVG_DD_ON.read_text("utf-8")},
+]
+
+SVG_DD_OFF = EXTENSION_PATH.joinpath("assets/datadog-disabled.svg")
+BUTTON_DISABLED_PATCH = [
+    {"op": "replace", "path": "/spec/text", "value": "Enable Datadog"},
+    {"op": "replace", "path": "/spec/iconSVG", "value": SVG_DD_OFF.read_text("utf-8")},
+]

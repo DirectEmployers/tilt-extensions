@@ -1,23 +1,8 @@
 import argparse
-import asyncio
-
-from tilt import tilt_enable
-
-from control import ExtensionOperator
-
-
-def serve():
-    operator = ExtensionOperator()
-    asyncio.run(operator.run())
-
-
-def remote():
-    operator = ExtensionOperator()
-    if op_port := operator.get_operator():
-        tilt_enable("datadog-operator", port=op_port)
-
 
 if __name__ == "__main__":
+    from control import remote, serve
+
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
 

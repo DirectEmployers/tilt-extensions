@@ -16,8 +16,6 @@ mkdir -p "$(dirname $1)"
 printf 'api-key=%s\napp-key=%s' "$DATADOG_API_KEY" "$DATADOG_APP_KEY" > "$datadog_keys_path"
 
 echo "Enabling Datadog resources"
-#tilt trigger '(Tiltfile)'
-# MUST TOGGLE!!
 tilt enable --labels datadog
 
 echo "Done"
