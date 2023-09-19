@@ -10,26 +10,37 @@ def cmd(command, quiet = True, command_bat = "", echo_off = True, env = {}, dir 
 
 
 def current_port():
-    return cmd(["sh", "-c", "echo $TILT_PORT"])
+    return int(cmd(["sh", "-c", "echo $TILT_PORT"])) or None
+
+
+def tilt_get(resource, name = None, port = None):
+    output = cmd([
+        "tilt",
+        "get",
+        "%s/%s" % (resource, name) if name else resource,
+        "--ignore-not-found",
+        "--port=%s" % str(port or current_port()),
+        "--output=yaml",
+    ])
+    return decode_yaml(output) if output else {}
+
+
+def which_sessions(resource, name, _all = False):
+    which = []
+    sessions = get_session_states()
+    for port in sessions.keys():
+        if not is_active(port):
+            continue
+        if tilt_get(resource, name, port):
+            which.append(int(port))
+
+    if not _all:
+        return min(which) if which else None
+    return which
 
 
 def get_session(port = None):
-    if not port:
-        port = current_port()
-
-    output = cmd(
-        [
-            "tilt",
-            "get",
-            "sessions",
-            "Tiltfile",
-            "--ignore-not-found",
-            "--port=%s" % port,
-            "--output=yaml",
-        ]
-    )
-
-    return decode_yaml(output) if output else {}
+    return tilt_get("sessions", "Tiltfile", port)
 
 
 def is_active(port = None):
@@ -72,6 +83,7 @@ def refresh_sessions(sessions):
     active = {}
     for port, created_at in sessions.items():
         if is_active(port):
+            active[port] = created_at
             patch_configmap("add", port, created_at)
         else:
             patch_configmap("remove", port)
@@ -111,24 +123,29 @@ def create_configmap():
     cmd(["kubectl", "apply", "-f", "-"], stdin = encode_yaml(configmap))
 
 
-def active_sessions():
+def active_sessions(verbose = False):
     sessions = get_session_states()
 
     if not configmap_exists():
         # Create the ConfigMap if it doesn't exist
         create_configmap()
 
-    if config.tilt_subcommand == "up":
-        # Add current session on `tilt up`
+    # Add current session
+    if config.tilt_subcommand != "down":
+        # Session port is not available for `tilt down`
         session = get_session()
-        sessions.update({current_port(): session["metadata"]["creationTimestamp"]})
+        sessions.update({str(current_port()): session["metadata"]["creationTimestamp"]})
 
     # Refresh ConfigMap with currently known active sessions
     sessions = refresh_sessions(sessions)
 
-    print("Active Tilt Sessions:")
-    for p, c in sessions.items():
-        print("-", "tiltSessionPort:", p)
-        print(" ", "creationTimestamp:", c)
+    if verbose:
+        print("Active Tilt Sessions:")
+        for p, c in sessions.items():
+            print("-", "tiltSessionPort:", p)
+            print(" ", "creationTimestamp:", c)
 
     return sessions.keys()
+
+
+active_sessions(True)
