@@ -18,6 +18,8 @@ datadog:
     env:
       - name: "DD_ADMISSION_CONTROLLER_ADD_AKS_SELECTORS"
         value: "true"
+    podAnnotations:
+      kubectl.kubernetes.io/default-container: cluster-agent
   dogstatsd:
     useHostPort: true
   admissionController:

@@ -1,24 +1,19 @@
 import asyncio
-import os
+import time
 from asyncio import Task
 
-from events import Event, TiltEvents
-from kubernetes import kubectl_get, kubectl_watch
-from tilt import (
-    TiltUIButton,
-    TiltUIResource,
-    tilt_enable,
-    tilt_get,
-    tilt_wait,
-    tilt_watch,
-)
+from kubernetes import kubectl_get, kubectl_wait, kubectl_watch
+from tilt import TiltUIButton, TiltUIResource, tilt_get
 from variables import (
     BUTTON_DISABLED_PATCH,
     BUTTON_ENABLED_PATCH,
-    DISABLED,
-    ENABLED,
+    DISABLE_SIGNAL,
+    DISABLED_STATE,
+    ENABLE_SIGNAL,
+    ENABLED_STATE,
     K8S_CONFIGMAP_SESSIONS,
     K8S_DEPLOYMENT_DATADOG,
+    SESSION_PORT,
     TILT_UIRESOURCE_DATADOG_OPERATOR,
 )
 
@@ -31,18 +26,8 @@ def serve():
 def remote():
     optr_ui = get_or_create_datadog_operator()
 
-    if optr_ui.is_enabled:
-        pass
-        # print(f"Tilt UISession @ {optr_ui.port}: Disabling datadog-operator")
-        # deployment = TiltUIResource("datadog-agent", optr_ui.port)
-        # if deployment.is_enabled:
-        #     deployment.disable(wait=True)
-        # optr_ui.disable()
-    else:
-        print(f"Tilt UISession @ {optr_ui.port}: Enabling datadog-operator")
+    if not optr_ui.is_enabled:
         optr_ui.enable(wait=True)
-        print("Enabling Datadog resources!")
-        tilt_enable(labels="datadog", port=optr_ui.port)
 
 
 def get_session_ports():
@@ -55,7 +40,7 @@ def get_or_create_datadog_operator():
     for session_port in get_session_ports():
         if tilt_get(TILT_UIRESOURCE_DATADOG_OPERATOR, port=session_port):
             return TiltUIResource("datadog-operator", port=session_port)
-    return TiltUIResource("datadog-operator", port=os.environ["TILT_PORT"])
+    return TiltUIResource("datadog-operator", port=SESSION_PORT)
 
 
 class SessionController:
@@ -73,13 +58,10 @@ class SessionController:
         self.port = port
         self.enabled = enable
 
-        self.operator = TiltUIResource("datadog-operator", port=self.port)
+        self.operator = get_or_create_datadog_operator()
         self.workload = TiltUIResource(
             "datadog-agent",
-            dependencies=[
-                "helm-datadog-repo",
-                "datadog-secret",
-            ],
+            toggle_args={"labels": "datadog"},
             port=self.port,
         )
         self.button = TiltUIButton(
@@ -89,40 +71,34 @@ class SessionController:
             port=self.port,
         )
 
-    def attach_task(self, task: Task):
-        self.task = task
-
     def __del__(self):
         self.task.cancel()
 
+    def attach_task(self, task: Task):
+        self.task = task
+
+    @property
+    def is_operator(self):
+        return self.port == self.operator.port
+
     def enable(self):
-        print(f"UISession @ Port {self.port}: Enabling datadog-agent")
         self.button.enable()
+
+        if not self.is_operator:
+            time.sleep(5)
+            print("Waiting for Datadog deployment to start...")
+            kubectl_wait(K8S_DEPLOYMENT_DATADOG, "condition=available", timeout="120s")
         self.workload.enable()
 
     def disable(self):
         self.button.disable()
         self.workload.disable()
 
-    async def watch(self, event_alias):
-        """Yield changes in event state."""
-        event_args = TiltEvents.aliases.get(event_alias)
-
-        if not event_args:
-            raise Exception(f"TiltEvent not found for alias: '{event_alias}'")
-
-        recent_events: dict = {}
-        async for value in tilt_watch(*event_args, port=self.port, watch_only=True):
-            event = Event(resource=event_args[0], alias=event_alias, value=value)
-            if recent_events.get(event.alias) != event.value:
-                recent_events[event.alias] = event.value
-                yield event
-
     async def run(self):
         """Watch for relevant changes in Tilt, update controllers."""
-        async for e in self.watch("datadog:button.click"):
+        async for e in self.button.watch():
             yield e
-        async for e in self.watch("datadog:workload.status"):
+        async for e in self.workload.watch():
             yield e
 
 
@@ -134,7 +110,7 @@ class ExtensionOperator:
 
     def __init__(self):
         self.operator_ui = get_or_create_datadog_operator()
-        self.state = ENABLED if self.is_enabled else DISABLED
+        self.state = ENABLED_STATE if self.is_enabled else DISABLED_STATE
 
     def get_session(self, port: int) -> SessionController | None:
         for controller in self.sessions:
@@ -158,12 +134,12 @@ class ExtensionOperator:
         return bool(k8s_resource)
 
     def enable(self):
-        self.state = ENABLED
+        self.state = ENABLED_STATE
         for controller in self.sessions:
             controller.enable()
 
     def disable(self):
-        self.state = DISABLED
+        self.state = DISABLED_STATE
         for controller in self.sessions:
             controller.disable()
 
@@ -175,12 +151,12 @@ class ExtensionOperator:
 
     def persist_state(self):
         if self.is_enabled:
-            self.state = ENABLED
+            self.state = ENABLED_STATE
         else:
-            self.state = DISABLED
+            self.state = DISABLED_STATE
 
     def propogate_state(self):
-        if self.state == ENABLED:
+        if self.state == ENABLED_STATE:
             self.enable()
         else:
             self.disable()
@@ -188,14 +164,11 @@ class ExtensionOperator:
     async def watch(self, session: SessionController):
         """Watch for new events from controller and pass to event_handler."""
         async for event in session.run():
-            print(f"UISession @ port {session.port}: Event received: {event.alias}")
-            match event:
-                case e if e.alias == "datadog:button.click":
-                    self.toggle()
-                case e if e.value == ENABLED:
-                    self.enable()
-                case e if e.value == DISABLED:
-                    self.disable()
+            print(f"{event} signal received")
+            if event == ENABLE_SIGNAL:
+                self.enable()
+            if event == DISABLE_SIGNAL:
+                self.disable()
 
     async def run(self):
         """Watch for relevant changes, update controller directives.

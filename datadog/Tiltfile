@@ -130,18 +130,20 @@ def helm_resources():
             "datadog-secret",
         ],
         labels = ["datadog"],
+        auto_init = False,
     )
 
 def stub_resource():
     local_resource(
         workload_name,
-        labels = ["datadog"],
         serve_cmd = [
             "kubectl",
             "logs",
+            "deployment/datadog-cluster-agent",
             "--follow=true",
             "--ignore-errors=false",
             "--pod-running-timeout=5m",
-            "--selector=app=datadog",
         ],
+        labels = ["datadog"],
+        auto_init = False,
     )
