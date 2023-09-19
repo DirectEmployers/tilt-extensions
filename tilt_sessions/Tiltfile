@@ -1,0 +1,151 @@
+"""Maintain a Kubernetes ConfigMap with active Tilt Sessions."""
+
+SCRIPTS = os.path.join(os.getcwd(), "scripts")
+CONFIGMAP_NAME = "tilt-active-sessions"
+
+
+def cmd(command, quiet = True, command_bat = "", echo_off = True, env = {}, dir = "", stdin = ""):
+    output = local(command, quiet, command_bat, echo_off, env, dir, stdin)
+    return str(output).strip()
+
+
+def current_port():
+    return int(cmd(["sh", "-c", "echo $TILT_PORT"])) or None
+
+
+def tilt_get(resource, name = None, port = None):
+    output = cmd([
+        "tilt",
+        "get",
+        "%s/%s" % (resource, name) if name else resource,
+        "--ignore-not-found",
+        "--port=%s" % str(port or current_port()),
+        "--output=yaml",
+    ])
+    return decode_yaml(output) if output else {}
+
+
+def which_sessions(resource, name, _all = False):
+    which = []
+    sessions = get_session_states()
+    for port in sessions.keys():
+        if not is_active(port):
+            continue
+        if tilt_get(resource, name, port):
+            which.append(int(port))
+
+    if not _all:
+        return min(which) if which else None
+    return which
+
+
+def get_session(port = None):
+    return tilt_get("sessions", "Tiltfile", port)
+
+
+def is_active(port = None):
+    script = os.path.join(SCRIPTS, "verify-active.sh")
+    return bool(cmd([script, port]))
+
+
+def configmap_exists():
+    output = cmd(
+        [
+            "kubectl",
+            "get",
+            "configmap",
+            CONFIGMAP_NAME,
+            "--ignore-not-found",
+            "--output",
+            "name"
+        ]
+    )
+    return output == CONFIGMAP_NAME
+
+
+def get_session_states():
+    existing_yaml = cmd(
+        [
+            "kubectl",
+            "get",
+            "configmap",
+            CONFIGMAP_NAME,
+            "--ignore-not-found",
+            "--output",
+            "yaml"
+        ]
+    )
+    configmap = decode_yaml(existing_yaml) if existing_yaml else {}
+    return configmap.get("data", {})
+
+
+def refresh_sessions(sessions):
+    active = {}
+    for port, created_at in sessions.items():
+        if is_active(port):
+            active[port] = created_at
+            patch_configmap("add", port, created_at)
+        else:
+            patch_configmap("remove", port)
+    return active
+
+
+def patch_configmap(op, port, value = ""):
+    if op not in ["add", "remove"]:
+        fail("Failed to patch ConfigMap: `op` argument must be one of (add, remove)")
+
+    value = "null" if op == "remove" else '"%s"' % value
+    return cmd(
+        [
+            "kubectl",
+            "patch",
+            "configmap",
+            CONFIGMAP_NAME,
+            "--type=merge",
+            "--patch",
+            '{"data": {"%s": %s}}' % (port, value),
+        ]
+    )
+
+
+def create_configmap():
+    configmap = {
+        "apiVersion": "v1",
+        "kind": "ConfigMap",
+        "metadata": {
+            "name": CONFIGMAP_NAME,
+            "annotations": {
+                "tilt.dev/down-policy": "keep",
+            },
+        },
+        "data": {},
+    }
+    cmd(["kubectl", "apply", "-f", "-"], stdin = encode_yaml(configmap))
+
+
+def active_sessions(verbose = False):
+    sessions = get_session_states()
+
+    if not configmap_exists():
+        # Create the ConfigMap if it doesn't exist
+        create_configmap()
+
+    # Add current session
+    if config.tilt_subcommand != "down":
+        # Session port is not available for `tilt down`
+        session = get_session()
+        sessions.update({str(current_port()): session["metadata"]["creationTimestamp"]})
+
+    # Refresh ConfigMap with currently known active sessions
+    sessions = refresh_sessions(sessions)
+
+    if verbose:
+        print("Active Tilt Sessions:")
+        for p, c in sessions.items():
+            print("-", "tiltSessionPort:", p)
+            print(" ", "creationTimestamp:", c)
+
+    return sessions.keys()
+
+
+active_sessions(True)

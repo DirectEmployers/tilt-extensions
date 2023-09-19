@@ -1,0 +1,149 @@
+"""Configuration for running Datadog Agent locally."""
+
+load("ext://uibutton", "cmd_button", "location", "text_input")
+load("ext://helm_resource", "helm_repo", "helm_resource")
+load("ext://secret", "secret_create_generic")
+load("../local_config/Tiltfile", "app_config_path")
+load("../tilt_sessions/Tiltfile", "which_sessions", "current_port")
+
+
+extension_path = os.getcwd()
+dd_user_config_path = app_config_path("directemployers/datadog")
+dd_settings_file = os.path.join(dd_user_config_path, ".settings.env")
+dd_key_file = os.path.join(dd_user_config_path, ".keys.env")
+
+workload_name = "datadog-agent"
+button_name = "de-remote:toggle-datadog-agent"
+
+
+def datadog_up():
+    port = current_port()
+    operator_port = which_sessions("uiresource", "datadog-operator")
+
+    if not operator_port or port == operator_port:
+        datadog_operator()
+
+        if os.path.exists(dd_key_file):
+            datadog_keys_secret()
+            helm_resources()
+        else:
+            warn(
+                "Datadog keys are required to use datadog-agent: No keys were found in",
+                dd_key_file,
+            )
+    else:
+        # Stub datadog-agent resource (for resource_deps compatibility)
+        stub_resource()
+
+    datadog_button()
+
+
+def dotenv(path, default = None):
+    env = read_file(path)
+
+    if not env:
+        return default or {}
+
+    return {k: v for k, v in [l.split("=") for l in str(env).split("\n") if l]}
+
+
+def datadog_operator():
+    scripts_root = os.path.join(extension_path, "scripts")
+    script = os.path.join(scripts_root, "datadog.py")
+
+    local_resource(
+        "datadog-operator",
+        serve_cmd = ["python", script, "serve"],
+        deps = [scripts_root],
+        labels = ["tilt"],
+    )
+
+
+def datadog_button():
+    keys = dotenv(dd_key_file)
+    script = os.path.join(extension_path, "scripts/datadog.py")
+    icon_off = read_file(os.path.join(extension_path, "assets/datadog-disabled.svg"))
+
+    cmd_button(
+        name = button_name,
+        argv = ["python", script, "remote"],
+        text = "Enable Datadog",
+        location = location.NAV,
+        icon_svg = icon_off,
+        inputs = [
+            text_input(
+                "DATADOG_API_KEY",
+                default = keys.get("api-key"),
+                label = "Enter a Datadog API key (https://app.datadoghq.com/organization-settings/api-keys)",
+            ),
+            text_input(
+                "DATADOG_APP_KEY",
+                default = keys.get("app-key"),
+                label = "Enter a Datadog application key (https://app.datadoghq.com/organization-settings/application-keys)",
+            ),
+            v1alpha1.ui_input_spec(
+                "DE_TILT_DATADOG_NAV_BTN",
+                label = "button_status",
+                hidden = v1alpha1.ui_hidden_input_spec("Disabled"),
+            )
+        ],
+    )
+
+
+def datadog_keys_secret():
+    print("Datadog keys found:", dd_key_file)
+
+    secret_create_generic(
+        "datadog-keys",
+        from_env_file = dd_key_file,
+    )
+
+    k8s_resource(
+        new_name = "datadog-secret",
+        objects = ["datadog-keys:secret"],
+        labels = ["datadog"]
+    )
+
+
+def helm_resources():
+    helm_repo(
+        "helm-datadog-repo",
+        "https://helm.datadoghq.com",
+        labels = ["datadog"],
+    )
+
+    chart_values = os.path.join(extension_path, "values.yaml")
+    helm_resource(
+        workload_name,
+        chart = "helm-datadog-repo/datadog",
+        release_name = "datadog",
+        flags = [
+            "--values",
+            chart_values,
+        ],
+        deps = [
+            dd_key_file,
+            chart_values,
+        ],
+        resource_deps = [
+            "helm-datadog-repo",
+            "datadog-secret",
+        ],
+        labels = ["datadog"],
+        auto_init = False,
+    )
+
+def stub_resource():
+    local_resource(
+        workload_name,
+        serve_cmd = [
+            "kubectl",
+            "logs",
+            "deployment/datadog-cluster-agent",
+            "--follow=true",
+            "--ignore-errors=false",
+            "--pod-running-timeout=5m",
+        ],
+        labels = ["datadog"],
+        auto_init = False,
+    )
