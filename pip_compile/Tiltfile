@@ -1,0 +1,38 @@
+load("ext://uibutton", "cmd_button")
+
+
+pip_compile_script = os.path.join(os.getcwd(), "scripts/pip-compile-container.sh")
+
+
+def pip_compile_button(requirements_path, ref, target = None):
+    """Add `pip-compile` button to all Tilt resources using `ref` image."""
+    docker_images_json = local(
+        ["tilt", "get", "dockerimages", "-o", "json"],
+        quiet = True,
+        echo_off = True,
+    )
+    images = decode_json(docker_images_json).get("items", [])
+
+    for dockerimage in images:
+        resource, image_ref = dockerimage["metadata"]["name"].split(":")
+
+        if image_ref != ref:
+            continue
+
+        spec = dockerimage.get("spec", {})
+
+        cmd_button(
+            name = "%s:btn:pip-compile" % resource,
+            resource = resource,
+            argv = [
+                "sh",
+                pip_compile_script,
+                image_ref,
+                spec.get("context", "."),
+                spec.get("dockerfile", "Dockerfile"),
+                target or spec.get("target", ""),
+                requirements_path,
+            ],
+            text = "pip-compile",
+            icon_name = "build_circle",
+        )
