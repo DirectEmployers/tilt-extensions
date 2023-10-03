@@ -2,7 +2,7 @@ load("ext://uibutton", "cmd_button")
 
 
 SCRIPTS = os.path.join(os.getcwd(), "scripts")
-DEFAULT_COMPILE_ARGS = ["--allow-unsafe", "--generate-hashes"]
+DEFAULT_COMPILE_ARGS = "--allow-unsafe --generate-hashes"
 
 
 def pip_compile_button(
@@ -23,7 +23,9 @@ def pip_compile_button(
     reqs_path = os.path.realpath(reqs_path)
     env_suffix = image.upper().replace("-", "_")
 
-    if type(compile_args) == list:
+    if not compile_args:
+        compile_args = DEFAULT_COMPILE_ARGS
+    elif type(compile_args) == list:
         compile_args = " ".join(compile_args)
 
     local_resource(

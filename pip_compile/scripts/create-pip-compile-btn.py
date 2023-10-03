@@ -6,7 +6,6 @@ from subprocess import run
 
 
 SCRIPTS = Path.cwd()
-DEFAULT_ARGS = "--allow-unsafe --generate-hashes"
 
 
 def add_pip_compile_buttons(image: str):
@@ -14,7 +13,7 @@ def add_pip_compile_buttons(image: str):
     env_suffix = image.upper().replace("-", "_")
     target = os.environ[f"PIP_COMPILE_TARGET_{env_suffix}"]
     reqs_path = os.environ[f"PIP_COMPILE_REQSPATH_{env_suffix}"]
-    compile_args = os.getenv(f"PIP_COMPILE_ARGS_{env_suffix}", DEFAULT_ARGS)
+    compile_args = os.environ[f"PIP_COMPILE_ARGS_{env_suffix}"]
 
     # Get DockerImage resources from Tilt:
     # These are used to grab all Tilt uiresources which use `image` and also
