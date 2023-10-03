@@ -1,5 +1,6 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 set -e
+pwd
 
 # Docker Arguments
 IMAGE_REF="$1"
@@ -16,6 +17,8 @@ REQ_MOUNT_PATH="/.pip-requirements/mount/"
 LOCAL_SCRIPT_PATH=$(dirname "$0")
 REQ_SCRIPT_PATH="/.pip-requirements/scripts/"
 
+COMPILE_ARGS="$6"
+
 # Build image.
 echo "Please wait: Building Docker image..."
 docker build --quiet \
@@ -27,11 +30,11 @@ docker build --quiet \
 # Compile pip requirements.
 echo "Please wait: Compiling pip requirements with pip-tools..."
 docker run -i --rm \
+  --user 0 \
   --name "pip-compile-$IMAGE_REF" \
   --volume "$LOCAL_REQ_PATH:$REQ_MOUNT_PATH:rw" \
   --volume "$LOCAL_SCRIPT_PATH:$REQ_SCRIPT_PATH:ro" \
-  --user 0 \
-  --entrypoint "$REQ_SCRIPT_PATH/entrypoint.sh" \
+  --entrypoint "$REQ_SCRIPT_PATH/entrypoint.sh $COMPILE_ARGS" \
   "$BUILD_TAG"
 
 echo

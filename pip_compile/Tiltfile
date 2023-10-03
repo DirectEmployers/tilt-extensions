@@ -1,38 +1,43 @@
 load("ext://uibutton", "cmd_button")
 
 
-pip_compile_script = os.path.join(os.getcwd(), "scripts/pip-compile-container.sh")
+SCRIPTS = os.path.join(os.getcwd(), "scripts")
+DEFAULT_COMPILE_ARGS = ["--allow-unsafe", "--generate-hashes"]
 
 
-def pip_compile_button(requirements_path, ref, target = None):
-    """Add `pip-compile` button to all Tilt resources using `ref` image."""
-    docker_images_json = local(
-        ["tilt", "get", "dockerimages", "-o", "json"],
-        quiet = True,
-        echo_off = True,
+def pip_compile_button(
+    image,
+    target = "",
+    reqs_path = ".",
+    compile_args = "",
+):
+    """Add `pip-compile` button to all Tilt resources using `image`.
+
+    This button operates very similar to the `cancel` button example in tilt-extensions:
+    https://github.com/tilt-dev/tilt-extensions/blob/master/cancel/README.md
+    """
+
+    if config.tilt_subcommand == "down":
+        return
+
+    reqs_path = os.path.realpath(reqs_path)
+    env_suffix = image.upper().replace("-", "_")
+
+    if type(compile_args) == list:
+        compile_args = " ".join(compile_args)
+
+    local_resource(
+        name="operator:pip-compile-btn",
+        serve_cmd = [
+            "bash",
+            os.path.join(SCRIPTS, "pip-compile-btn-controller.sh"),
+            image,
+        ],
+        serve_env = {
+            "PIP_COMPILE_TARGET_%s" % env_suffix: target,
+            "PIP_COMPILE_REQSPATH_%s" % env_suffix: reqs_path,
+            "PIP_COMPILE_ARGS_%s" % env_suffix: compile_args,
+        },
+        dir = SCRIPTS,
+        labels = "support",
     )
-    images = decode_json(docker_images_json).get("items", [])
-
-    for dockerimage in images:
-        resource, image_ref = dockerimage["metadata"]["name"].split(":")
-
-        if image_ref != ref:
-            continue
-
-        spec = dockerimage.get("spec", {})
-
-        cmd_button(
-            name = "%s:btn:pip-compile" % resource,
-            resource = resource,
-            argv = [
-                "sh",
-                pip_compile_script,
-                image_ref,
-                spec.get("context", "."),
-                spec.get("dockerfile", "Dockerfile"),
-                target or spec.get("target", ""),
-                requirements_path,
-            ],
-            text = "pip-compile",
-            icon_name = "build_circle",
-        )
