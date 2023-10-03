@@ -11,14 +11,17 @@ After registering the repo and extension (see [main README](../README.md)), you 
 ```starlark
 load("ext://pip_compile", "pip_compile_button")
 
-pip_compile_button(
-    # Path to the directory which contains the requirements .in and .txt files.
-    "./requirements/",
-    
+pip_compile_button(    
     # Name of the Docker image (same as the first argument of `docker_build`).
     "image-name",
     
     # Optional: Name of build stage to target (same as the `target` argument of `docker_build`).
     target = "build",
+    
+    # Path to the directory which contains the requirements .in and .txt files.
+    reqs_path = "./requirements/",
+    
+    # Optional arguments to pass to `pip-compile` (Default: `--allow-unsafe --generate-hashes`).
+    compile_args = ["--upgrade-package", "black"],
 )
 ```
