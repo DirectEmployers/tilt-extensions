@@ -23,22 +23,38 @@ REQ_SCRIPT_PATH="/.pip-requirements/scripts/"
 COMPILE_ARGS="$6"
 
 # Build image.
+echo
 echo "Please wait: Building Docker image..."
 docker build --quiet \
   --tag "$BUILD_TAG" \
   --target "$IMAGE_TARGET" \
   --cache-from "$IMAGE_REF" \
-  --file "$DOCKERFILE" "$IMAGE_CONTEXT"
+  --file "$DOCKERFILE" \
+  "$IMAGE_CONTEXT"
+
+if [ $? != 0 ]; then
+  echo
+  echo "Error: Docker image failed to build"
+  exit 1
+fi
 
 # Compile pip requirements.
+echo
 echo "Please wait: Compiling pip requirements with pip-tools..."
 docker run -i --rm \
   --user 0 \
   --name "pip-compile-$IMAGE_REF" \
   --volume "$LOCAL_REQ_PATH:$REQ_MOUNT_PATH:rw" \
   --volume "$LOCAL_SCRIPT_PATH:$REQ_SCRIPT_PATH:ro" \
-  --entrypoint "$REQ_SCRIPT_PATH/entrypoint.sh $COMPILE_ARGS" \
-  "$BUILD_TAG"
+  --entrypoint "${REQ_SCRIPT_PATH}entrypoint.sh" \
+  "$BUILD_TAG" \
+  "$COMPILE_ARGS"
+
+if [ $? != 0 ]; then
+  echo
+  echo "Error: Pip requirements failed to compile"
+  exit 2
+fi
 
 echo
 echo "Done: Pip requirements have been compiled!"
