@@ -29,7 +29,7 @@ def pip_compile_button(
         compile_args = " ".join(compile_args)
 
     local_resource(
-        name="operator:pip-compile-btn",
+        name="%s:pip-compile:operator" % image,
         serve_cmd = [
             "bash",
             os.path.join(SCRIPTS, "pip-compile-btn-controller.sh"),

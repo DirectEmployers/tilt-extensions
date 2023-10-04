@@ -13,10 +13,9 @@ cd "$(dirname "$0")" || exit
 set -euo pipefail
 IFS=$'\n\t'
 
-export
-echo "operator:pip-compile runs in the background and listens to Tilt"
+echo "🕵️‍♀️ ${1}:pip-compile:operator runs in the background and listens to Tilt"
+echo "ℹ️ When there are resources with pip-compile, operator:pip-compile adds a 'pip-compile' button to the Tilt UI."
 echo
-echo "When there are resources with pip-compile, operator:pip-compile adds a 'pip-compile' button to the Tilt UI"
 
 # Currently, we only watch Cmds.
 tilt get imagemaps --watch-only -o name | while read -r full_imagemap_name; do

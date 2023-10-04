@@ -25,7 +25,7 @@ def add_pip_compile_buttons(image: str):
     )
     images = json.loads(docker_images_json.stdout).get("items", [])
 
-    print(f"Creating pip-compile buttons for {image}:")
+    print(f"🛠️ Creating pip-compile buttons for {image}")
     for dockerimage in images:
         # Tilt uiresource and Docker image ref can be split from DockerImage name.
         resource, image_ref = dockerimage["metadata"]["name"].split(":", 1)
@@ -33,7 +33,7 @@ def add_pip_compile_buttons(image: str):
         if image_ref != image:
             continue
 
-        print(f"Creating pip-compile button for {resource}...")
+        print(f"Creating pip-compile button for {resource}…")
         spec = dockerimage.get("spec", {})
         cmd_args = [
             str(SCRIPTS / "pip-compile-container.sh"),
@@ -48,9 +48,9 @@ def add_pip_compile_buttons(image: str):
         json_config = generate_tilt_json(resource, spec["context"], cmd_args)
 
         if tilt_apply(json_config).returncode == 0:
-            print(f"- Created pip-compile button for {resource}")
+            print(f"✅ Created pip-compile button for {resource}")
         else:
-            print(f"- Could not create pip-compile button for {resource}")
+            print(f"❌ Could not create pip-compile button for {resource}")
 
 
 def tilt_apply(json_config):
