@@ -1,0 +1,35 @@
+"""Tilt wrapper for Minikube's ingress-nginx plugin."""
+
+LABEL = "ingress"
+
+def load_minikube(resource_deps = [], labels = []):
+    k8s_yaml("k8s/ingressclass.yaml")
+
+    k8s_resource(
+        new_name = "ingress-class",
+        objects = ["nginx:ingressclass"],
+        labels = labels or [LABEL],
+    )
+
+    local_resource(
+        "ingress-nginx",
+        serve_cmd = ["sleep", "infinity"],
+        serve_cmd_bat = "ping -t localhost > NUL",
+        readiness_probe = probe(
+            failure_threshold=3,
+            initial_delay_secs=5,
+            period_secs=10,
+            timeout_secs=2,
+            exec = exec_action([
+                "kubectl",
+                "-n",
+                "ingress-nginx",
+                "rollout",
+                "status",
+                "deployment",
+                "ingress-nginx-controller",
+            ]),
+        ),
+        resource_deps = resource_deps,
+        labels = labels or [LABEL],
+    )

@@ -1,0 +1,21 @@
+load("ext://helm_resource", "helm_repo", "helm_resource")
+load("ext://namespace", "namespace_create")
+
+REPO_ALIAS = "ingress-nginx-repo"
+LABEL = "ingress"
+
+def load_helmchart(resource_deps = [], labels = []):
+    helm_repo(
+        REPO_ALIAS,
+        url = "https://kubernetes.github.io/ingress-nginx",
+        labels = labels or [LABEL],
+    )
+
+    helm_resource(
+        "ingress-nginx",
+        chart = "%s/ingress-nginx" % REPO_ALIAS,
+        namespace = "ingress-nginx",
+        flags = ["--create-namespace"],
+        resource_deps = [REPO_ALIAS].extend(resource_deps),
+        labels = labels or [LABEL],
+    )
