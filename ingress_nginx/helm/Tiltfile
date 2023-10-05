@@ -15,7 +15,10 @@ def load_helmchart(resource_deps = [], labels = []):
         "ingress-nginx",
         chart = "%s/ingress-nginx" % REPO_ALIAS,
         namespace = "ingress-nginx",
-        flags = ["--create-namespace"],
+        flags = [
+            "--create-namespace",
+            "--set=controller.allowSnippetAnnotations=true",
+        ],
         resource_deps = [REPO_ALIAS].extend(resource_deps),
         labels = labels or [LABEL],
     )
