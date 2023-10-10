@@ -23,26 +23,25 @@ def tarfetch(
     labels = None
 ):
     """
-    Create a local resource that will (via rsync) sync the specified files
-    from the specified k8s object to the local filesystem.
+    Create a local resource that will (via rsync) sync the specified files from the
+    specified k8s object to the local filesystem.
 
-    :param name (str): name of the created local resource.
-    :param k8s_object (str): a Kubernetes object identifier (e.g. deploy/my-deploy,
+    :param name: name of the created local resource.
+    :param k8s_object: a Kubernetes object identifier (e.g. deploy/my-deploy,
         job/my-job, or a pod ID) that Tilt can use to select a pod. As per the
         behavior of `kubectl exec`, we will act on the first pod of the specified
         object, using the first container by default.
-    :param src_dir (str): directory IN THE KUBERNETES CONTAINER to sync from. Any
+    :param src_dir: directory IN THE KUBERNETES CONTAINER to sync from. Any
         paths specified, if relative, should be relative to this dir.
-    :param target_dir (str, optional): directory ON THE LOCAL FS to sync to. Defaults to '.'
-    :param namespace (str, optional): namespace of the desired k8s_object, if not `default`.
-    :param container (str, optional): name of the container to sync from (by default,
+    :param target_dir: directory ON THE LOCAL FS to sync to. Defaults to '.'
+    :param namespace: namespace of the desired k8s_object, if not `default`.
+    :param container: name of the container to sync from (by default,
         the first container)
-    :param ignore (List[str], optional): patterns to ignore when syncing, see
+    :param ignore: patterns to ignore when syncing, see
         `tar --exclude` documentation for details on supported patterns.
-    :param keep_newer (bool, optional): prevents files overwrites when the destination
+    :param keep_newer: prevents files overwrites when the destination
         file is newer. Default is true.
-    :param verbose (bool, optional): if true, shows tar extract activity.
-    :return:
+    :param verbose: if true, shows tar extract activity.
     """
 
     # Verify inputs
