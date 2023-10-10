@@ -14,13 +14,13 @@ def tarfetch(
     name,
     k8s_object,
     src_dir,
-    target_dir=".",
-    namespace="default",
-    container="",
-    ignore=None,
-    keep_newer=True,
-    verbose=False,
-    labels=tuple()
+    target_dir = ".",
+    namespace = "default",
+    container = "",
+    ignore = None,
+    keep_newer = True,
+    verbose = False,
+    labels = None
 ):
     """
     Create a local resource that will (via rsync) sync the specified files
@@ -48,7 +48,7 @@ def tarfetch(
     # Verify inputs
     if not src_dir.endswith("/"):
         fail(
-            "src_dir must be a directory and have a trailing slash (because of rsync syntax rules)"
+            "src_dir must be a directory and have a trailing slash (because of rsync syntax rules)",
         )
 
     to_exclude = ignore
@@ -62,14 +62,14 @@ def tarfetch(
 
     # bundle container flag with k8s object specifier
     if container:
-        k8s_object = "{obj} -c {container}".format(obj=k8s_object, container=container)
+        k8s_object = "{obj} -c {container}".format(obj = k8s_object, container = container)
 
     destination_path = os.path.realpath(target_dir)
     if not os.path.exists(destination_path):
         print("Preparing destination path for reverse sync:")
         local(
             ["mkdir", "-p", destination_path],
-            command_bat="mkdir {} || ver>nul".format(destination_path),
+            command_bat = "mkdir {} || ver>nul".format(destination_path),
             quiet = True,
         )
 
@@ -83,15 +83,15 @@ def tarfetch(
             "tar -x -f - {verbose} {keep_newer} --directory={target_dir} && " +
             "echo Done."
         ).format(
-            namespace=namespace,
-            k8s_object=k8s_object,
-            exclude=excludes,
-            src_dir=src_dir,
-            target_dir=target_dir,
-            keep_newer="--keep-newer-files" if keep_newer else "",
-            verbose="--verbose" if verbose else "",
+            namespace = namespace,
+            k8s_object = k8s_object,
+            exclude = excludes,
+            src_dir = src_dir,
+            target_dir = target_dir,
+            keep_newer = "--keep-newer-files" if keep_newer else "",
+            verbose = "--verbose" if verbose else "",
         ),
-        trigger_mode=TRIGGER_MODE_MANUAL,
-        auto_init=False,
-        labels=labels,
+        trigger_mode = TRIGGER_MODE_MANUAL,
+        auto_init = False,
+        labels = labels,
     )
