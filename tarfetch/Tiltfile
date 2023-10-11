@@ -20,7 +20,7 @@ def tarfetch(
     ignore = None,
     keep_newer = True,
     verbose = False,
-    labels = None
+    labels = None,
 ):
     """
     Create a sync button on the specified Tilt resource, which will pull files from
@@ -42,7 +42,20 @@ def tarfetch(
     :param keep_newer: prevents files overwrites when the destination
         file is newer. Default is true.
     :param verbose: if true, shows tar extract activity.
+    :param labels: deprecated argument from when tarfetch was a resource rather than
+        a UI button.
     """
+
+    # Deprecation handling
+    if tilt_resource.startswith("sync") or tilt_resource.startswith("tarfetch"):
+        warn(
+            "[tarfetch] WARNING: The leading positional argument 'tilt_resource' may "
+            + "have changed in purpose since it was configured for this project. "
+            + "Please update it to reference the Tilt UI resource to bind the sync "
+            + "button to."
+        )
+    if labels:
+        warn("[tarfetch] WARNING: The 'labels' argument has been deprecated and may be removed.")
 
     # Verify inputs
     if not src_dir.endswith("/"):
