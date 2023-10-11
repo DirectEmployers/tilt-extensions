@@ -1,5 +1,4 @@
-# -*- mode: Python -*-
-
+TARFETCH_SCRIPT = os.path.join(os.getcwd(), "scripts", "tarfetch.sh")
 DEFAULT_EXCLUDES = [
     ".git",
     ".gitignore",
@@ -85,25 +84,38 @@ def tarfetch(
             quiet = True,
         )
 
-    local_resource(
-        name,
-        (
-            "(" +
-            "kubectl exec -i -n {namespace} {k8s_object} -- " +
-            "tar -c -f - --atime-preserve=system --directory={src_dir} {exclude} ." +
-            ") | " +
-            "tar -x -f - {verbose} {keep_newer} --directory={target_dir} && " +
-            "echo Done."
-        ).format(
-            namespace = namespace,
-            k8s_object = k8s_object,
-            exclude = excludes,
-            src_dir = src_dir,
-            target_dir = target_dir,
-            keep_newer = "--keep-newer-files" if keep_newer else "",
-            verbose = "--verbose" if verbose else "",
+
+    btn_name = "btn-tarfetch-" + tilt_resource
+    v1alpha1.ui_button(
+        name = btn_name,
+        location = {
+            "component_type": "Resource",
+            "component_id": tilt_resource,
+        },
+        text = "Sync from Container",
+        icon_name = "cloud_sync",
+        annotations = {"tilt.dev/resource": tilt_resource},
+    )
+
+    env = {
+        "namespace": namespace,
+        "resource_name": k8s_resource,
+        "exclude": excludes,
+        "src_dir": src_dir,
+        "target_dir": target_dir,
+        "keep_newer": "--keep-newer-files" if keep_newer else "",
+        "verbose": "--verbose" if verbose else "",
+    }
+
+    v1alpha1.cmd(
+        name = "cmd-tarfetch-" + tilt_resource,
+        annotations = {
+            "tilt.dev/resource": tilt_resource,
+            "tilt.dev/log-span-id": "cmd:tarfetch:" + tilt_resource,
+        },
+        args = [TARFETCH_SCRIPT],
+        env = ["TARFETCH_%s=%s" % (k.upper(), v) for k, v in env.items()],
+        start_on = v1alpha1.start_on_spec(
+            ui_buttons = [btn_name],
         ),
-        trigger_mode = TRIGGER_MODE_MANUAL,
-        auto_init = False,
-        labels = labels,
     )
