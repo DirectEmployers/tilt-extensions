@@ -58,9 +58,7 @@ def tarfetch(
 
     # Verify inputs
     if not src_dir.endswith("/"):
-        fail(
-            "src_dir must be a directory and have a trailing slash (because of rsync syntax rules)",
-        )
+        fail("[tarfetch] src_dir must be a directory and have a trailing slash")
 
     to_exclude = ignore
     if not ignore:
@@ -77,7 +75,7 @@ def tarfetch(
 
     destination_path = os.path.realpath(target_dir)
     if not os.path.exists(destination_path):
-        print("Preparing destination path for reverse sync:")
+        print("[tarfetch] Preparing destination path for reverse sync:")
         local(
             ["mkdir", "-p", destination_path],
             command_bat = "mkdir {} || ver>nul".format(destination_path),
