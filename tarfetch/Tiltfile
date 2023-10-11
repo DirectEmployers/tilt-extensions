@@ -11,8 +11,8 @@ DEFAULT_EXCLUDES = [
 ]
 
 def tarfetch(
-    name,
-    k8s_object,
+    tilt_resource,
+    k8s_resource,
     src_dir,
     target_dir = ".",
     namespace = "default",
@@ -23,11 +23,11 @@ def tarfetch(
     labels = None
 ):
     """
-    Create a local resource that will (via rsync) sync the specified files from the
-    specified k8s object to the local filesystem.
+    Create a sync button on the specified Tilt resource, which will pull files from
+    a Kubernetes container onto the local filesystem.
 
-    :param name: name of the created local resource.
-    :param k8s_object: a Kubernetes object identifier (e.g. deploy/my-deploy,
+    :param tilt_resource: name of Tilt resource to bind button to.
+    :param k8s_resource: a Kubernetes object identifier (e.g. deploy/my-deploy,
         job/my-job, or a pod ID) that Tilt can use to select a pod. As per the
         behavior of `kubectl exec`, we will act on the first pod of the specified
         object, using the first container by default.
@@ -61,7 +61,7 @@ def tarfetch(
 
     # bundle container flag with k8s object specifier
     if container:
-        k8s_object = "{obj} -c {container}".format(obj = k8s_object, container = container)
+        k8s_resource = "{obj} -c {container}".format(obj = k8s_resource, container = container)
 
     destination_path = os.path.realpath(target_dir)
     if not os.path.exists(destination_path):
