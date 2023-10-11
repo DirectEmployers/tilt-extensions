@@ -1,9 +1,11 @@
 """Tilt wrapper for Minikube's ingress-nginx plugin."""
 
 LABEL = "ingress"
+INGRESS_CLASS_YAML = os.path.join(os.getcwd(), "k8s/ingressclass.yaml")
+
 
 def load_minikube(resource_deps = [], labels = []):
-    k8s_yaml("k8s/ingressclass.yaml")
+    k8s_yaml(INGRESS_CLASS_YAML)
 
     k8s_resource(
         new_name = "ingress-class",
