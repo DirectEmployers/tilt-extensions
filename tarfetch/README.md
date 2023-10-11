@@ -20,8 +20,8 @@ load('ext://tarfetch', 'tarfetch')
 A `tarfetch` resource can be created with the following parameters:
 
 Required parameters:
-* **name (str)**: a name for the local resource
-* **k8s_object (str)**: a Kubernetes object identifier (e.g. `deploy/my-deploy`, `job/my-job`, or a pod ID) that Tilt can use to select a pod. As per the behavior of `kubectl exec`, we will act on the first pod of the specified object, using the first container by default
+* **tilt_resource (str)**: name of Tilt resource to bind button to
+* **k8s_resource (str)**: a Kubernetes object identifier (e.g. `deploy/my-deploy`, `job/my-job`, or a pod ID) that Tilt can use to select a pod. As per the behavior of `kubectl exec`, we will act on the first pod of the specified object, using the first container by default
 * **src_dir (str)**: directory *in the remote container* to sync from. Any `paths`, if specified, should be relative to this dir. This path *must* be a directory and must contain a trailing slash (e.g. `/app/` is acceptable; `/app` is not)
 
 Optional parameters:
@@ -31,7 +31,7 @@ Optional parameters:
 * **ignore (List[str], optional)**: patterns to ignore when syncing, [see `tar --exclude` documentation for details on supported patterns](https://www.gnu.org/software/tar/manual/html_node/exclude.html).
 * **keep_newer (bool, optional)**: prevents files overwrites when the destination file is newer. Default is true.
 * **verbose (bool, optional)**: if true, shows tar extract activity.
-* **labels (Union[str, List[str]], optional)**: used to group resources in the Web UI.
+
 
 ### Example invocation
 
@@ -39,7 +39,7 @@ Create a local resource called "tarfetch-app" which connects to the first pod of
 
 ```python
 tarfetch(
-   'tarfetch-app', 
+   'tilt-app-resource', 
    'deployments/frontend',
    '/app/',
    './frontend',
