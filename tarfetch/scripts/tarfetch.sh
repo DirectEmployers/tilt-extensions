@@ -3,7 +3,7 @@
 set -eux
 
 get_tar() {
-  kubectl exec -i -n "$TARFETCH_NAMESPACE" "$TARFETCH_RESOURCE_NAME" -- \
+  kubectl exec -n "$TARFETCH_NAMESPACE" "$TARFETCH_RESOURCE_NAME" -- \
     tar -c -f - --atime-preserve=system --directory="$TARFETCH_SRC_DIR" "$TARFETCH_EXCLUDE" .
 }
 
