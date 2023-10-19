@@ -20,6 +20,7 @@ def tarfetch(
     keep_newer = True,
     verbose = False,
     labels = None,
+    button_text = None,
 ):
     """
     Create a sync button on the specified Tilt resource, which will pull files from
@@ -43,6 +44,7 @@ def tarfetch(
     :param verbose: if true, shows tar extract activity.
     :param labels: deprecated argument from when tarfetch was a resource rather than
         a UI button.
+    :param button_text: provide custom text for button label.
     """
 
     # Deprecation handling
@@ -90,7 +92,7 @@ def tarfetch(
             "component_type": "Resource",
             "component_id": tilt_resource,
         },
-        text = "Sync from Container",
+        text = button_text or "Sync from Container",
         icon_name = "cloud_sync",
         annotations = {"tilt.dev/resource": tilt_resource},
     )
