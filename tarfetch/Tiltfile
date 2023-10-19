@@ -75,12 +75,11 @@ def tarfetch(
     if container:
         k8s_resource = "{obj} -c {container}".format(obj = k8s_resource, container = container)
 
-    destination_path = os.path.realpath(target_dir)
-    if not os.path.exists(destination_path):
+    if not os.path.exists(target_dir):
         print("[tarfetch] Preparing destination path for reverse sync:")
         local(
-            ["mkdir", "-p", destination_path],
-            command_bat = "mkdir {} || ver>nul".format(destination_path),
+            ["mkdir", "-p", target_dir],
+            command_bat = "mkdir {} || ver>nul".format(target_dir),
             quiet = True,
         )
 
