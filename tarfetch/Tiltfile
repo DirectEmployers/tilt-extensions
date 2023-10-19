@@ -101,8 +101,8 @@ def tarfetch(
         "exclude": excludes,
         "src_dir": src_dir,
         "target_dir": target_dir,
-        "keep_newer": "--keep-newer-files" if keep_newer else "",
-        "verbose": "--verbose" if verbose else "",
+        "keep_newer": str(bool(keep_newer)).lower(),
+        "verbose": str(bool(verbose)).lower(),
     }
 
     v1alpha1.cmd(

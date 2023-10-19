@@ -1,16 +1,27 @@
 #!/usr/bin/env sh
 
-set -eux
+set -eu
 
-get_tar() {
+PACK_ARGS="--directory=${TARFETCH_SRC_DIR}"
+[ -n "$TARFETCH_EXCLUDE" ] && PACK_ARGS="${PACK_ARGS} ${TARFETCH_EXCLUDE}"
+
+UNPACK_ARGS="--directory=${TARFETCH_TARGET_DIR}"
+[ "$TARFETCH_KEEP_NEWER" = "true" ] && UNPACK_ARGS="${UNPACK_ARGS} --keep-newer-files"
+
+if [ "$TARFETCH_VERBOSE" = "true" ]; then
+  UNPACK_ARGS="${UNPACK_ARGS} --verbose"
+  set -x
+fi
+
+pack() {
   kubectl exec -n "$TARFETCH_NAMESPACE" "$TARFETCH_RESOURCE_NAME" -- \
-    tar -c -f - --atime-preserve=system --directory="$TARFETCH_SRC_DIR" "$TARFETCH_EXCLUDE" .
+    tar -c -f - $PACK_ARGS .
 }
 
 unpack() {
-  tar -x -f - "$TARFETCH_VERBOSE" "$TARFETCH_KEEP_NEWER" --directory="$TARFETCH_TARGET_DIR"
+  tar -x -f - $UNPACK_ARGS
 }
 
-get_tar | unpack
+pack | unpack
 
 echo '[tarfetch] Done: Sync from container has finished.'
