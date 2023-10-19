@@ -25,14 +25,14 @@ Create a local resource called "tarfetch-app" which connects to the first pod of
 
 ```starlark
 # Import extension
-load('ext://tarfetch', 'tarfetch')
+load("ext://tarfetch", "tarfetch")
 
 # Setup tarfetch to attach the button to a Tilt resource
 tarfetch(
-   'tilt-app-resource', 
-   'deployments/frontend',
-   '/app/',
-   './frontend',
+   "tilt-app-resource", 
+   "deployments/frontend",
+   "/app/",
+   "./frontend",
    ignore=["node_modules"]
 )
 ```
@@ -49,7 +49,7 @@ A `tarfetch` resource can be created with the following parameters:
 
 ### Optional parameters
 
-* **target_dir (str, optional)**: directory *on the local filesystem* to sync to. Defaults to `'.'`
+* **target_dir (str, optional)**: directory *on the local filesystem* to sync to. Defaults to `"."`
 * **namespace (str, optiona)**: namespace of the desired `k8s_object`, if not `default`.
 * **container (str, optional)**: name of the container to sync from (by default, the first container)
 * **ignore (List[str], optional)**: patterns to ignore when syncing, [see `tar --exclude` documentation for details on supported patterns](https://www.gnu.org/software/tar/manual/html_node/exclude.html).
