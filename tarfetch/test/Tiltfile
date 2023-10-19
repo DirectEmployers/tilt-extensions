@@ -1,0 +1,20 @@
+load("../Tiltfile", "tarfetch")
+
+k8s_yaml("k8s/pod-tarfetch.yaml")
+
+tarfetch(
+   "tarfetch-example",
+   "pods/tarfetch-example",
+   "/app/",
+   "./files/",
+   ignore = [
+       "**/dont",
+      "dont.*",
+   ]
+)
+
+local_resource(
+  "tarfetch-tests",
+  cmd = ["./test-tarfetch.sh"],
+  resource_deps = ["tarfetch-example"]
+)

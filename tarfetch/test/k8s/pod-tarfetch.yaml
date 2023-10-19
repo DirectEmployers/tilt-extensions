@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tarfetch-example
+spec:
+  terminationGracePeriodSeconds: 1
+  containers:
+  - name: tarfetch-example
+    image: busybox:latest
+    imagePullPolicy: IfNotPresent
+    workingDir: /app
+    command:
+    - sh
+    - -euc
+    args:
+    - |
+      mkdir do
+      mkdir dont
+      
+      touch do.sync
+      touch dont.sync
+      touch do/do.sync
+      touch do/dont.sync
+      touch dont/do.sync
+      touch dont/dont.sync
+      
+      sleep infinity
