@@ -2,14 +2,14 @@ load("ext://uibutton", "cmd_button")
 
 
 SCRIPTS = os.path.join(os.getcwd(), "scripts")
-DEFAULT_COMPILE_ARGS = "--allow-unsafe --generate-hashes"
+DEFAULT_COMPILE_ARGS = ["--allow-unsafe", "--generate-hashes"]
 
 
 def pip_compile_button(
     image,
     target = "",
     reqs_path = ".",
-    compile_args = "",
+    compile_args = DEFAULT_COMPILE_ARGS,
 ):
     """Add `pip-compile` button to all Tilt resources using `image`.
 
@@ -23,11 +23,6 @@ def pip_compile_button(
     reqs_path = os.path.realpath(reqs_path)
     env_suffix = image.upper().replace("-", "_")
 
-    if not compile_args:
-        compile_args = DEFAULT_COMPILE_ARGS
-    elif type(compile_args) == list:
-        compile_args = " ".join(compile_args)
-
     local_resource(
         name="%s:pip-compile:operator" % image,
         serve_cmd = [
@@ -38,7 +33,7 @@ def pip_compile_button(
         serve_env = {
             "PIP_COMPILE_TARGET_%s" % env_suffix: target,
             "PIP_COMPILE_REQSPATH_%s" % env_suffix: reqs_path,
-            "PIP_COMPILE_ARGS_%s" % env_suffix: compile_args,
+            "PIP_COMPILE_ARGS_%s" % env_suffix: " ".join(compile_args),
         },
         dir = SCRIPTS,
         labels = "support",
