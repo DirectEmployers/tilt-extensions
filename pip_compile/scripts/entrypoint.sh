@@ -9,8 +9,12 @@ BUILD_PATH="/.pip-requirements/build"
 MOUNT_PATH="/.pip-requirements/mount"
 
 diffcp() {
-  # Copy files only when their contents have changed (prevents Tilt reload)
-  cmp -s "$1" "$2" || cp "$1" "$2" && echo "No changes made to $1."
+  # Copy files only when their contents have changed (to prevent Tilt reload)
+  if cmp -s "$1" "$2"; then
+    echo "No changes made to $1."
+  else
+    cp "$1" "$2"
+  fi
 }
 
 compile() {
