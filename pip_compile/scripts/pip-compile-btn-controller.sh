@@ -12,8 +12,8 @@ cd "$(dirname "$0")" || exit
 set -euo pipefail
 IFS=$'\n\t'
 
-echo "🕵️‍♀️ ${1}:pip-compile:operator runs in the background and listens to Tilt"
-echo "ℹ️ When there are resources with pip-compile, operator:pip-compile adds a 'pip-compile' button to the Tilt UI."
+echo "🕵️‍♀️ pip-compile-operator:${1} runs in the background and listens to Tilt"
+echo "ℹ️ When there are resources with pip-compile, the operator adds a 'pip-compile' button to the Tilt UI."
 echo
 
 # Currently, we only watch Cmds.
