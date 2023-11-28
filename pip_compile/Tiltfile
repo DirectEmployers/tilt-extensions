@@ -37,3 +37,10 @@ def pip_compile_button(
         dir = SCRIPTS,
         labels = "support",
     )
+
+    # Make sure the resource is enabled!
+    config.define_string_list("args", args=True)
+    cfg = config.parse()
+    args = cfg.get('args', [])
+    args.append(controller_resource)
+    config.set_enabled_resources(args)
