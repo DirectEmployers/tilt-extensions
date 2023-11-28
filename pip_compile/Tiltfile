@@ -16,6 +16,7 @@ def pip_compile_button(
     This button operates very similar to the `cancel` button example in tilt-extensions:
     https://github.com/tilt-dev/tilt-extensions/blob/master/cancel/README.md
     """
+    # Resolve absolute path for requirements directory.
     reqs_path = os.path.realpath(reqs_path)
     env_suffix = image.upper().replace("-", "_")
 
