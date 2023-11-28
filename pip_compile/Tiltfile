@@ -20,8 +20,10 @@ def pip_compile_button(
     env_suffix = image.upper().replace("-", "_")
 
     # Start a controller to watch for image changes and update related resources.
+
+    controller_resource = "pip-compile-controller:%s" % image
     local_resource(
-        name="pip-compile-operator:%s" % image,
+        name = controller_resource,
         serve_cmd = [
             "bash",
             os.path.join(SCRIPTS, "pip-compile-btn-controller.sh"),
