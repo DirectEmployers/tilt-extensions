@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 #
-# Start a controller that watches Tilt for new DockerImages, and adds new
-# buttons to the appropriate Tilt UIResources.
-#
+# Start a controller that watches Tilt for new DockerImages, and adds new buttons to the appropriate Tilt UIResources.
 # Inspired by: https://github.com/tilt-dev/tilt-extensions/blob/master/cancel/cancel_btn_controller.sh
+#
 
 # Ensure proper working directory
 cd "$(dirname "$0")" || exit

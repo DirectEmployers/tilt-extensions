@@ -1,4 +1,8 @@
 #!/usr/bin/env sh
+#
+# Convenience functions used in pip-compile-container.sh, making compile, diff, and copy code reusable.
+#
+
 set -eux
 
 BUILD_PATH="/.pip-requirements/build"

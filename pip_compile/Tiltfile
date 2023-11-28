@@ -18,11 +18,13 @@ def pip_compile_button(
     """
 
     if config.tilt_subcommand == "down":
+        # Don't run on `tilt down`.
         return
 
     reqs_path = os.path.realpath(reqs_path)
     env_suffix = image.upper().replace("-", "_")
 
+    # Start a controller to watch for image changes and update related resources.
     local_resource(
         name="%s:pip-compile:operator" % image,
         serve_cmd = [

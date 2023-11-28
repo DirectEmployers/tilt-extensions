@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#
+# Builds a container image, then executes pip-compile inside the container. If Pip requirements files have changed as a
+# result, they will be updated and copied back to the host filesystem.
+#
 
 # Set unofficial strict-mode for bash 🔏
 # Source: http://redsymbol.net/articles/unofficial-bash-strict-mode/ 👀
