@@ -1,7 +1,7 @@
 load("ext://uibutton", "cmd_button")
 
 
-SCRIPTS = os.path.join(os.getcwd(), "scripts")
+SCRIPT = os.path.join(os.getcwd(), "scripts", "controller.py")
 DEFAULT_COMPILE_ARGS = ["--allow-unsafe", "--generate-hashes"]
 
 
@@ -20,21 +20,14 @@ def pip_compile_button(
     env_suffix = image.upper().replace("-", "_")
 
     # Start a controller to watch for image changes and update related resources.
+    cmd = ["python", SCRIPT, image, "--target", target, "--reqs-path", reqs_path]
+    for arg in compile_args:
+        cmd.append("--compile-args=%s" % arg)
 
     controller_resource = "pip-compile-controller:%s" % image
     local_resource(
         name = controller_resource,
-        serve_cmd = [
-            "bash",
-            os.path.join(SCRIPTS, "pip-compile-btn-controller.sh"),
-            image,
-        ],
-        serve_env = {
-            "PIP_COMPILE_TARGET_%s" % env_suffix: target,
-            "PIP_COMPILE_REQSPATH_%s" % env_suffix: reqs_path,
-            "PIP_COMPILE_ARGS_%s" % env_suffix: " ".join(compile_args),
-        },
-        dir = SCRIPTS,
+        serve_cmd = cmd,
         labels = "support",
     )
 
