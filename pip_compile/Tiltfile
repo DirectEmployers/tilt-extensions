@@ -50,7 +50,7 @@ def pip_compile_button(
     for arg in compile_args:
         cmd.append("--compile-args=%s" % arg)
 
-    controller_resource = "pip-compile-controller/%s" % slugify(image)
+    controller_resource = "pip-compile-controller:%s" % slugify(image)
     local_resource(
         name = controller_resource,
         serve_cmd = cmd,
