@@ -1,7 +1,6 @@
 import argparse
 import json
 import subprocess
-import tempfile
 from pathlib import Path
 
 BUILD_TAG = "build"
