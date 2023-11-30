@@ -12,7 +12,14 @@ CONTAINER_REQUIREMENTS_PATH = "/.pip-requirements/mount/"
 CONTAINER_SCRIPTS_PATH = "/.pip-requirements/scripts/"
 
 
-def build_image(image, tilt_resource, target):
+def build_image(image: str, tilt_resource: str, target: str):
+    """Build the container image which will be used run `pip-compile`.
+
+    :param image:
+    :param tilt_resource:
+    :param target:
+    :return:
+    """
     dockerimages_json = subprocess.run(
         ["tilt", "get", "dockerimages", f"{tilt_resource}:{image}", "-o", "json"],
         capture_output=True,
@@ -41,8 +48,14 @@ def build_image(image, tilt_resource, target):
         print(process.stdout, process.stderr)
         exit(1)
 
+def run_container(image: str, compile_args: list[str], local_req_path: Path):
+    """Run a container with the required mounts to compile requirements.
 
-def run_container(image, compile_args, local_req_path):
+    :param image:
+    :param compile_args:
+    :param local_req_path:
+    :return:
+    """
     docker_run = [
         "docker",
         "run",
@@ -69,7 +82,16 @@ def compile_requirements(
     local_req_path: Path,
     compile_args: list[str],
 ):
-    """Build and run image to build pip requirements with pip-tools."""
+    """Build and run image to build pip requirements with pip-tools.
+
+    :param image:
+    :param resource:
+    :param target:
+    :param local_req_path:
+    :param compile_args:
+    :return:
+    """
+    # Prepare the container image to run `pip-compile`.
     build_image(image, resource, target)
 
     # Compile pip requirements.
