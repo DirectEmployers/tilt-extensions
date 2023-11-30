@@ -12,6 +12,22 @@ SCRIPT = os.path.join(os.getcwd(), "scripts", "controller.py")
 DEFAULT_COMPILE_ARGS = ["--allow-unsafe", "--generate-hashes"]
 
 
+def slugify(name):
+    """Slugify a string (image name) to work with Tilt resource naming.
+
+    The OCI specification states that image names and references may contain
+    alphanumeric characters, periods, forward-slashes, underscores, and hyphens:
+    https://github.com/opencontainers/distribution-spec/blob/9317d9/spec.md#pulling-manifests
+
+    Testing confirms that the `name` argument for Tilt's `local_resource` function
+    is compatible with all of the same characters except the forward-slash (`/`).
+
+    Args:
+      name: The name of a Docker image.
+    """
+    return name.replace("/", "-")
+
+
 def pip_compile_button(
     image,
     target = "",
@@ -34,7 +50,7 @@ def pip_compile_button(
     for arg in compile_args:
         cmd.append("--compile-args=%s" % arg)
 
-    controller_resource = "pip-compile-controller:%s" % image
+    controller_resource = "pip-compile-controller/%s" % slugify(image)
     local_resource(
         name = controller_resource,
         serve_cmd = cmd,
