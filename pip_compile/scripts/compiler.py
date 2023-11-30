@@ -84,7 +84,7 @@ def compile_requirements(
     print("Please wait: Compiling pip requirements with pip-tools...")
     run_container(image, compile_args, local_req_path)
 
-    print("Done: Pip requirements have been compiled!")
+    print("Done: pip requirements have been compiled!")
 
 
 if __name__ == "__main__":
