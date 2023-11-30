@@ -1,3 +1,10 @@
+"""Add a `pip-compile` button to your Tilt resources!
+
+This extension takes some inspiration `cancel` button example extensions, which uses
+a very basic observer/controller pattern to watch for changes:
+https://github.com/tilt-dev/tilt-extensions/blob/master/cancel/README.md
+"""
+
 load("ext://uibutton", "cmd_button")
 
 
@@ -13,8 +20,11 @@ def pip_compile_button(
 ):
     """Add `pip-compile` button to all Tilt resources using `image`.
 
-    This button operates very similar to the `cancel` button example in tilt-extensions:
-    https://github.com/tilt-dev/tilt-extensions/blob/master/cancel/README.md
+    Args:
+      image: Name of the Docker image (same as the first argument of `docker_build`).
+      target: Optional: Name of build stage to target (same as the `target` argument of `docker_build`).
+      reqs_path: Path to the directory which contains the requirements .in and .txt files.
+      compile_args: Optional arguments to pass to `pip-compile` (Default: `--allow-unsafe --generate-hashes`).
     """
     # Resolve absolute path for requirements directory.
     reqs_path = os.path.realpath(reqs_path)
