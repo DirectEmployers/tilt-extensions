@@ -38,15 +38,17 @@ def build_image(image: str, tilt_resource: str, target: str):
         "--file=-",
         spec["context"],
     ]
-    process = subprocess.run(
-        docker_build,
-        input=spec["dockerfileContents"].encode("utf-8"),
-    )
 
-    if process.returncode != 0:
+    try:
+        subprocess.run(
+            docker_build,
+            check=True,
+            input=spec["dockerfileContents"].encode("utf-8"),
+        )
+    except subprocess.CalledProcessError:
         print("Error: Docker image failed to build")
-        print(process.stdout, process.stderr)
-        exit(1)
+        raise
+
 
 def run_container(image: str, compile_args: list[str], local_req_path: Path):
     """Run a container with the required mounts to compile requirements.
@@ -69,10 +71,12 @@ def run_container(image: str, compile_args: list[str], local_req_path: Path):
         f"{image}:{BUILD_TAG}",
     ]
     docker_run.extend(compile_args)
-    process = subprocess.run(docker_run)
-    if process.returncode != 0:
+
+    try:
+        subprocess.run(docker_run, check=True)
+    except subprocess.CalledProcessError:
         print("Error: Pip requirements failed to compile")
-        exit(2)
+        raise
 
 
 def compile_requirements(
