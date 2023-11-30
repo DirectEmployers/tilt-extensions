@@ -21,13 +21,6 @@ def build_image(image, tilt_resource, target):
     dockerimages = json.loads(dockerimages_json.stdout)
     spec = dockerimages["spec"]
 
-    # with tempfile.NamedTemporaryFile(mode="w+") as dockerfile:
-    #     # Create temporary Dockerfile.
-    #     dockerfile.write(spec["dockerfileContents"])
-    #     dockerfile.close()
-    #
-    #     print(dockerfile.name)
-
     docker_build = [
         "docker",
         "build",
