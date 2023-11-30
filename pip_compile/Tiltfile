@@ -57,9 +57,13 @@ def pip_compile_button(
         labels = "support",
     )
 
-    # Make sure the resource is enabled!
+    # Make sure the controller is enabled!
     config.define_string_list("args", args=True)
     cfg = config.parse()
-    args = cfg.get('args', [])
-    args.append(controller_resource)
+    args = cfg.get("args", [])
+
+    if args:
+        # Skip this if there were no `tilt up` arguments, that way all resources start!
+        args.append(controller_resource)
+
     config.set_enabled_resources(args)
