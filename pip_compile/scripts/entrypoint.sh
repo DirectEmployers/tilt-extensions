@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 #
-# Convenience functions used in pip-compile-container.sh, making compile, diff, and copy code reusable.
+# Convenience functions used by the container, making compile, diff, and copy code reusable. Referenced in compiler.py.
 #
 
 set -eux
