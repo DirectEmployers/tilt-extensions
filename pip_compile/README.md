@@ -18,7 +18,7 @@ pip_compile_button(
     # Optional: Name of build stage to target (same as the `target` argument of `docker_build`).
     target = "build",
     
-    # Path to the directory which contains the requirements .in and .txt files.
+    # Optional: Path to the directory which contains the requirements .in and .txt files (Default: `.`).
     reqs_path = "./requirements/",
     
     # Optional arguments to pass to `pip-compile` (Default: `--allow-unsafe --generate-hashes`).
