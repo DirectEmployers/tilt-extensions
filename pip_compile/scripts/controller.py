@@ -37,6 +37,14 @@ def update_image_resources(
     reqs_path: Path,
     compile_args: list[str],
 ):
+    """Handle creating `pip-compile` button for every Tilt UIResource using `image`.
+
+    :param image:
+    :param target:
+    :param reqs_path:
+    :param compile_args:
+    :return:
+    """
     enabled_resources = get_enabled_tilt_resources()
     resource_images = get_tilt_dockerimages()
 
@@ -65,6 +73,15 @@ def get_cmd_args(
     reqs_path: Path,
     compile_args: list[str],
 ) -> list[str]:
+    """Generate the command that the `pip-compile` button will execute.
+
+    :param image:
+    :param resource:
+    :param target:
+    :param reqs_path:
+    :param compile_args:
+    :return:
+    """
     cmd_args = [
         "python",
         str(SCRIPTS / "compiler.py"),
@@ -80,6 +97,11 @@ def get_cmd_args(
 
 
 def tilt_apply(json_config: str) -> subprocess.CompletedProcess:
+    """Apply a Tilt API resource from the provided JSON configuration.
+
+    :param json_config:
+    :return:
+    """
     return subprocess.run(
         ["tilt", "apply", "-f", "-"],
         capture_output=True,
@@ -89,6 +111,11 @@ def tilt_apply(json_config: str) -> subprocess.CompletedProcess:
 
 
 def tilt_resource_template(kind: str) -> dict:
+    """Scaffold a template dict for a Tilt API resource of the specified `kind`.
+
+    :param kind:
+    :return:
+    """
     return {
         "apiVersion": "tilt.dev/v1alpha1",
         "kind": kind,
@@ -98,6 +125,13 @@ def tilt_resource_template(kind: str) -> dict:
 
 
 def generate_tilt_json(resource: str, context: str, arguments: list[str]) -> str:
+    """Generate the JSON needed to create a Cmd and UIButton via the Tilt API.
+
+    :param resource:
+    :param context:
+    :param arguments:
+    :return:
+    """
     btn_name = f"{resource}:btn:pip-compile"
     log_span_id = f"{resource}:pip-compile"
 
@@ -140,6 +174,12 @@ def run_controller(image: str, target: str, reqs_path: Path, compile_args: list[
 
     Relevant Tilt UI Resources are those which consume the same Docker image which the
     `pip-compile` extension has been configured for.
+
+    :param image:
+    :param target:
+    :param reqs_path:
+    :param compile_args:
+    :return:
     """
 
     print(
