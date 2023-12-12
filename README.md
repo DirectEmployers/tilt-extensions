@@ -39,7 +39,7 @@ v1alpha1.extension(
 )
 
 v1alpha1.extension(
-    name = "pip_compile_button",
+    name = "pip_compile",
     repo_name = "de-tilt",
     repo_path = "pip_compile_button",
 )

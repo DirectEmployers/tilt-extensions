@@ -1,0 +1,69 @@
+"""Add a `pip-compile` button to your Tilt resources!
+
+This extension takes some inspiration `cancel` button example extensions, which uses
+a very basic observer/controller pattern to watch for changes:
+https://github.com/tilt-dev/tilt-extensions/blob/master/cancel/README.md
+"""
+
+load("ext://uibutton", "cmd_button")
+
+
+SCRIPT = os.path.join(os.getcwd(), "scripts", "controller.py")
+DEFAULT_COMPILE_ARGS = ["--allow-unsafe", "--generate-hashes"]
+
+
+def slugify(name):
+    """Slugify a string (image name) to work with Tilt resource naming.
+
+    The OCI specification states that image names and references may contain
+    alphanumeric characters, periods, forward-slashes, underscores, and hyphens:
+    https://github.com/opencontainers/distribution-spec/blob/9317d9/spec.md#pulling-manifests
+
+    Testing confirms that the `name` argument for Tilt's `local_resource` function
+    is compatible with all of the same characters except the forward-slash (`/`).
+
+    Args:
+      name: The name of a Docker image.
+    """
+    return name.replace("/", "-")
+
+
+def pip_compile_button(
+    image,
+    target = "",
+    reqs_path = ".",
+    compile_args = DEFAULT_COMPILE_ARGS,
+):
+    """Add `pip-compile` button to all Tilt resources using `image`.
+
+    Args:
+      image: Name of the Docker image (same as the first argument of `docker_build`).
+      target: Optional: Name of build stage to target (same as the `target` argument of `docker_build`).
+      reqs_path: Path to the directory which contains the requirements .in and .txt files.
+      compile_args: Optional arguments to pass to `pip-compile` (Default: `--allow-unsafe --generate-hashes`).
+    """
+    # Resolve absolute path for requirements directory.
+    reqs_path = os.path.realpath(reqs_path)
+
+    # Start a controller to watch for image changes and update related resources.
+    cmd = ["python", SCRIPT, image, "--target", target, "--reqs-path", reqs_path]
+    for arg in compile_args:
+        cmd.append("--compile-args=%s" % arg)
+
+    controller_resource = "pip-compile-controller:%s" % slugify(image)
+    local_resource(
+        name = controller_resource,
+        serve_cmd = cmd,
+        labels = "support",
+    )
+
+    # Make sure the controller is enabled!
+    config.define_string_list("args", args=True)
+    cfg = config.parse()
+    args = cfg.get("args", [])
+
+    if args:
+        # Skip this if there were no `tilt up` arguments, that way all resources start!
+        args.append(controller_resource)
+
+    config.set_enabled_resources(args)
