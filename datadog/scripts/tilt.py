@@ -288,7 +288,12 @@ class TiltUIResource(TiltAPIResource):
         return status == "Enabled"
 
     def _push_state(self, enable: bool = True):
-        tilt_xable(enable=enable, port=self.port, **self.toggle_args)
+        tilt_xable(
+            enable=enable,
+            port=self.port,
+            resources=self.name,
+            **self.toggle_args,
+        )
 
         trigger_mode = self.properties["status"].get("triggerMode")
         if enable and trigger_mode is not None:
