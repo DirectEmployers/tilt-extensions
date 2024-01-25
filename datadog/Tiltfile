@@ -28,8 +28,8 @@ def datadog_up():
             helm_resources()
         else:
             warn(
-                "Datadog keys are required to use datadog-agent: No keys were found in",
-                dd_key_file,
+                "Datadog keys are required to use datadog-agent: No keys were found "
+                "in %s" % dd_key_file
             )
     else:
         # Stub datadog-agent resource (for resource_deps compatibility)
