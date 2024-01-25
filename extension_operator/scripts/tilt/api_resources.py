@@ -2,163 +2,15 @@ import json
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from utils import async_run, run
-from variables import DISABLE_SIGNAL, ENABLE_SIGNAL, ENABLED_STATE
-
-
-async def tilt_watch(
-    resource: str,
-    jsonpath: str | None = None,
-    output: str = "jsonpath",
-    watch: bool = True,
-    watch_only: bool = False,
-    port: int | None = None,
-):
-    args = [
-        "tilt",
-        "get",
-        resource,
-    ]
-
-    if output == "jsonpath" and jsonpath:
-        args.append(f'-o=jsonpath={{$.{jsonpath}}}{{"\\n"}}')
-    else:
-        args.extend(["--output", output])
-
-    if watch_only:
-        args.append("--watch-only")
-    elif watch:
-        args.append("--watch")
-
-    if port:
-        args.extend(["--port", port])
-
-    buffer = ""
-    async for line in async_run(args):
-        if output == "json":
-            try:
-                yield json.loads(buffer + line)
-                buffer = ""
-            except json.decoder.JSONDecodeError:
-                buffer += line
-                continue
-        else:
-            yield line
-
-
-def tilt_wait(
-    resource: str,
-    wait_for: str,
-    timeout: str = "30s",
-    output_type: str = "json",
-    port: int | None = None,
-):
-    args = [
-        "tilt",
-        "wait",
-        resource,
-        f"--for={wait_for}",
-        f"--timeout={timeout}",
-        f"--output={output_type}",
-    ]
-
-    if port:
-        args.extend(["--port", port])
-
-    return run(args, output_type)
-
-
-def tilt_get(
-    resource: str,
-    watch: bool = False,
-    output_type: str = "json",
-    port: int | None = None,
-):
-    args = ["tilt", "get", resource, "--output", output_type]
-
-    if port:
-        args.extend(["--port", port])
-
-    if watch:
-        args.extend(["--watch"])
-
-    return run(args, output_type)
-
-
-def tilt_xable(
-    enable: bool = True,
-    resources: str | list[str] | None = None,
-    labels: str | list[str] | None = None,
-    port: int | None = None,
-):
-    op = "enable" if enable else "disable"
-    args = ["tilt", op]
-
-    if isinstance(resources, str):
-        args.append(resources)
-    elif isinstance(resources, list):
-        args.extend(resources)
-
-    if labels is not None:
-        args.append("--labels")
-        if isinstance(labels, str):
-            args.append(labels)
-        elif isinstance(labels, list):
-            args.extend(labels)
-
-    if port:
-        args.extend(["--port", port])
-
-    return run(args)
-
-
-def tilt_enable(
-    resources: str | list[str] | None = None,
-    labels: str | list[str] | None = None,
-    port: int | None = None,
-):
-    return tilt_xable(
-        enable=True,
-        resources=resources,
-        labels=labels,
-        port=port,
-    )
-
-
-def tilt_disable(
-    resources: str | list[str] | None = None,
-    labels: str | list[str] | None = None,
-    port: int | None = None,
-):
-    return tilt_xable(
-        enable=False,
-        resources=resources,
-        labels=labels,
-        port=port,
-    )
-
-
-def tilt_trigger(resource: str, port: int | None = None):
-    args = ["tilt", "trigger", resource]
-
-    if port:
-        args.extend(["--port", port])
-
-    return run(args)
-
-
-def tilt_patch(
-    resource: str,
-    config: str,
-    patch_type: str = "strategic",
-    port: int | None = None,
-):
-    args = ["tilt", "patch", resource, "--type", patch_type, "-p", config]
-
-    if port:
-        args.extend(["--port", port])
-
-    return run(args)
+from constants import DISABLE_SIGNAL, ENABLE_SIGNAL, ENABLED
+from tilt.command import (
+    _tilt_enable,
+    tilt_get,
+    tilt_patch,
+    tilt_trigger,
+    tilt_wait,
+    tilt_watch,
+)
 
 
 @dataclass
@@ -176,7 +28,7 @@ class TiltAPIResource:
 
     @property
     def properties(self):
-        return tilt_get(self.canonical_name, port=self.port) or {}
+        return tilt_get(self.canonical_name, port=self.port)
 
     def exists(self) -> bool:
         return bool(self.properties)
@@ -284,20 +136,13 @@ class TiltUIResource(TiltAPIResource):
         return "uiresource"
 
     def _test_status(self) -> bool:
-        try:
-            status = self.properties["status"]["disableStatus"]["state"]
-            return status == "Enabled"
-        except KeyError:
-            return False
+        status = self.properties["status"]["disableStatus"]["state"]
+        return status == "Enabled"
 
     def _push_state(self, enable: bool = True):
-        tilt_xable(
-            enable=enable,
-            port=self.port,
-            **self.toggle_args,
-        )
+        _tilt_enable(enable=enable, port=self.port, **self.toggle_args)
 
-        trigger_mode = self.properties.get("status", {}).get("triggerMode")
+        trigger_mode = self.properties["status"].get("triggerMode")
         if enable and trigger_mode is not None:
             print(f"Triggering {self.canonical_name}")
             tilt_trigger(self.name, port=self.port)
@@ -306,7 +151,7 @@ class TiltUIResource(TiltAPIResource):
         async for resource_object in super().watch():
             status = resource_object["status"]["disableStatus"]["state"]
 
-            if status == ENABLED_STATE:
+            if status == ENABLED:
                 yield ENABLE_SIGNAL
             else:
                 yield DISABLE_SIGNAL
