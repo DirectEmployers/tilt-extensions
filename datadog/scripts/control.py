@@ -49,10 +49,12 @@ def get_session_ports():
 
 
 def get_or_create_datadog_operator():
+    kwargs = {"toggle_args": {"resources": "datadog-operator"}}
+
     for session_port in get_session_ports():
         if tilt_get(TILT_UIRESOURCE_DATADOG_OPERATOR, port=session_port):
-            return TiltUIResource("datadog-operator", port=session_port)
-    return TiltUIResource("datadog-operator", port=SESSION_PORT)
+            return TiltUIResource("datadog-operator", port=session_port, **kwargs)
+    return TiltUIResource("datadog-operator", port=SESSION_PORT, **kwargs)
 
 
 class SessionController:
