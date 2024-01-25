@@ -65,7 +65,7 @@ def datadog_button():
 
     cmd_button(
         name = button_name,
-        argv = ["python", script, "remote"],
+        argv = ["python", script, "remote", dd_key_file],
         text = "Enable Datadog",
         location = location.NAV,
         icon_svg = icon_off,

@@ -1,4 +1,5 @@
 import asyncio
+import os
 import time
 from asyncio import Task
 
@@ -23,11 +24,22 @@ def serve():
     asyncio.run(optr.run())
 
 
-def remote():
+def remote(keyfile_path: str):
     optr_ui = get_or_create_datadog_operator()
+    handle_config_changes(keyfile_path)
 
     if not optr_ui.is_enabled:
         optr_ui.enable(wait=True)
+
+
+def handle_config_changes(keyfile_path):
+    datadog_api_key = os.getenv("DATADOG_API_KEY", "")
+    datadog_app_key = os.getenv("DATADOG_APP_KEY", "")
+
+    if datadog_api_key or datadog_app_key:
+        with open(keyfile_path, "w") as f:
+            f.write(f"api-key={datadog_api_key}\n")
+            f.write(f"app-key={datadog_app_key}\n")
 
 
 def get_session_ports():

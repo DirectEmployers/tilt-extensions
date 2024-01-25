@@ -10,7 +10,12 @@ if __name__ == "__main__":
     start_operator.set_defaults(func=serve)
 
     boop_event = subparsers.add_parser("remote")
+    boop_event.add_argument("keyfile_path")
     boop_event.set_defaults(func=remote)
 
-    args = parser.parse_args()
-    args.func()
+    parsed = parser.parse_args()
+
+    if parsed.func == remote:
+        parsed.func(parsed.keyfile_path)
+    else:
+        parsed.func()
