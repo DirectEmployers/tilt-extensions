@@ -12,6 +12,8 @@ dd_user_config_path = app_config_path("directemployers/datadog")
 dd_settings_file = os.path.join(dd_user_config_path, ".settings.env")
 dd_key_file = os.path.join(dd_user_config_path, ".keys.env")
 
+watch_settings(dd_user_config_path)
+
 workload_name = "datadog-agent"
 button_name = "de-remote:toggle-datadog-agent"
 
