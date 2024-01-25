@@ -7,10 +7,13 @@ def run(command: list[str], output_type: str = "default"):
     proc = subprocess.run(command, stdout=subprocess.PIPE)
 
     success = proc.stdout and not proc.returncode
-    if output_type == "json":
-        return json.loads(proc.stdout) if success else {}
+    if success and output_type == "json":
+        return json.loads(proc.stdout)
 
-    return proc.stdout if success else ""
+    if not success:
+        print("Error:", proc.stderr)
+
+    return proc.stdout
 
 
 async def async_run(args):
