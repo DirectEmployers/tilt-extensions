@@ -38,11 +38,11 @@ def datadog_up():
     datadog_button()
 
 
-def dotenv(path, default = None):
-    env = read_file(path)
+def dotenv(path, default = {}):
+    env = read_file(path, default)
 
-    if not env:
-        return default or {}
+    if not env or env == default:
+        return default
 
     return {k: v for k, v in [l.split("=") for l in str(env).split("\n") if l]}
 
