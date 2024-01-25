@@ -22,6 +22,8 @@ def datadog_up():
     port = current_port()
     operator_port = which_sessions("uiresource", "datadog-operator")
 
+    datadog_button()
+
     if not operator_port or port == operator_port:
         datadog_operator()
 
@@ -35,8 +37,6 @@ def datadog_up():
     else:
         # Stub datadog-agent resource (for resource_deps compatibility)
         stub_resource()
-
-    datadog_button()
 
 
 def dotenv(path, default = {}):
@@ -133,6 +133,7 @@ def helm_resources():
         labels = ["datadog"],
         auto_init = False,
     )
+
 
 def stub_resource():
     local_resource(
