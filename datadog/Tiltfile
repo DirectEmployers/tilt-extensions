@@ -39,10 +39,10 @@ def datadog_up():
 
 
 def dotenv(path, default = {}):
-    env = read_file(path, default)
+    env = read_file(path, "")
 
-    if not env or env == default:
-        return default
+    if not env:
+        return default or {}
 
     return {k: v for k, v in [l.split("=") for l in str(env).split("\n") if l]}
 
