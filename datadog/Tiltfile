@@ -72,12 +72,12 @@ def datadog_button():
         inputs = [
             text_input(
                 "DATADOG_API_KEY",
-                default = keys.get("api-key"),
+                default = keys.get("api-key", ""),
                 label = "Enter a Datadog API key (https://app.datadoghq.com/organization-settings/api-keys)",
             ),
             text_input(
                 "DATADOG_APP_KEY",
-                default = keys.get("app-key"),
+                default = keys.get("app-key", ""),
                 label = "Enter a Datadog application key (https://app.datadoghq.com/organization-settings/application-keys)",
             ),
             v1alpha1.ui_input_spec(
