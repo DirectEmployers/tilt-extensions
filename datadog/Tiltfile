@@ -28,11 +28,12 @@ def datadog_up():
 
         if os.path.exists(dd_key_file):
             datadog_keys_secret()
-            helm_resources()
         else:
             warn(
                 "Datadog keys are required to use datadog-agent: No keys were found in %s" % dd_key_file
             )
+
+        helm_resources()
     else:
         # Stub datadog-agent resource (for resource_deps compatibility)
         stub_resource()
