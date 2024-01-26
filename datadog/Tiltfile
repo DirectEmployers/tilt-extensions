@@ -30,7 +30,10 @@ def datadog_up():
             datadog_keys_secret()
         else:
             warn(
-                "Datadog keys are required to use datadog-agent: No keys were found in %s" % dd_key_file
+                "Warning: Datadog API and App keys are required to use the Datadog "
+                + "Cluster Agent, you can set them from the Datadog button dropdown.\n"
+                + " • Get API Key: https://app.datadoghq.com/organization-settings/api-keys\n"
+                + " • Get Application Key: https://app.datadoghq.com/organization-settings/application-keys"
             )
 
         helm_resources()
