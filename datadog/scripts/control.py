@@ -43,7 +43,7 @@ def handle_config_changes(keyfile_path):
     datadog_app_key = os.getenv("DATADOG_APP_KEY", "")
 
     if datadog_api_key or datadog_app_key:
-        Path(keyfile_path).parent.mkdir(parents=True, exists_ok=True)
+        Path(keyfile_path).parent.mkdir(parents=True, exist_ok=True)
         with open(keyfile_path, "w") as f:
             f.write(f"api-key={datadog_api_key}\n")
             f.write(f"app-key={datadog_app_key}\n")
