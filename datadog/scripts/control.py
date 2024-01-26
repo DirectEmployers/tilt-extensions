@@ -82,8 +82,8 @@ class SessionController:
         self.operator = get_or_create_datadog_operator()
         self.workload = TiltUIResource(
             "datadog-agent",
-            toggle_args={"labels": "datadog"},
             port=self.port,
+            toggle_args={"labels": "datadog"},
         )
         self.button = TiltUIButton(
             "de-remote:toggle-datadog-agent",
