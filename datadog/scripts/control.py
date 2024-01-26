@@ -3,7 +3,12 @@ import os
 import time
 from asyncio import Task
 
-from kubernetes import kubectl_get, kubectl_wait, kubectl_watch
+from kubernetes import (
+    kubectl_create_secret_from_env_file,
+    kubectl_get,
+    kubectl_wait,
+    kubectl_watch,
+)
 from tilt import TiltUIButton, TiltUIResource, tilt_get
 from variables import (
     BUTTON_DISABLED_PATCH,
@@ -40,6 +45,8 @@ def handle_config_changes(keyfile_path):
         with open(keyfile_path, "w") as f:
             f.write(f"api-key={datadog_api_key}\n")
             f.write(f"app-key={datadog_app_key}\n")
+
+    kubectl_create_secret_from_env_file("datadog-keys", from_env_file=keyfile_path)
 
 
 def get_session_ports():
