@@ -52,7 +52,7 @@ def dotenv(path, default = {}):
     env = read_file(path, "")
 
     if not env:
-        return default or {}
+        return default
 
     return {k: v for k, v in [l.split("=") for l in str(env).split("\n") if l]}
 
