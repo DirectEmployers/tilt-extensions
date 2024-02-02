@@ -2,6 +2,11 @@
 
 Add a button to the Tilt UI to toggle Datadog agent resources using Helm.
 
+## Requirements
+
+- Tilt >= 0.33.5
+- Python >= 3.10
+
 ## Usage
 
 After registering the repo and extension (see [main README](../README.md)), you can invoke the extension using
