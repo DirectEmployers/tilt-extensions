@@ -18,6 +18,11 @@ button_name = "de-remote:toggle-datadog-agent"
 
 
 def datadog_up():
+    """Main function for this Tilt extension.
+
+    Creates necessary resources for the Datadog Agent to run and be shared across
+    multiple Tilt sessions.
+    """
     port = current_port()
     operator_port = which_sessions("uiresource", "datadog-operator")
 
@@ -43,6 +48,7 @@ def datadog_up():
 
 
 def dotenv(path, default = {}):
+    """Read a local envfile/dotfile into a dict, or returns `default`."""
     env = read_file(path, "")
 
     if not env:
@@ -52,6 +58,10 @@ def dotenv(path, default = {}):
 
 
 def datadog_operator():
+    """Create datadog-operator resource, a state-management background process.
+
+    Manages UIButton presses and maintains state between Tilt sessions.
+    """
     scripts_root = os.path.join(extension_path, "scripts")
     script = os.path.join(scripts_root, "datadog.py")
 
@@ -64,6 +74,11 @@ def datadog_operator():
 
 
 def datadog_button():
+    """Create Tilt UIButton resource to toggle Datadog Agent and take credentials.
+
+    The button runs scripts and sends signals to the datadog-operator to ensure that
+    the Datadog Agent assumes the correct state across Tilt sessions.
+    """
     keys = dotenv(dd_key_file)
     script = os.path.join(extension_path, "scripts/datadog.py")
     icon_off = read_file(os.path.join(extension_path, "assets/datadog-disabled.svg"))
@@ -95,6 +110,11 @@ def datadog_button():
 
 
 def datadog_keys_secret():
+    """Create Kubernetes secret to store Datadog credentials.
+
+    If no keys are found via local dotfile, they will be generated from provided
+    values on Tilt UI button press.
+    """
     print("Datadog keys found:", dd_key_file)
 
     secret_create_generic(
@@ -110,6 +130,7 @@ def datadog_keys_secret():
 
 
 def helm_resources():
+    """Create Tilt resources required to install Datadog Agent from Helm charts."""
     helm_repo(
         "helm-datadog-repo",
         "https://helm.datadoghq.com",
@@ -139,6 +160,14 @@ def helm_resources():
 
 
 def stub_resource():
+    """Create Tilt resource that acts as a stub for the real datadog-agent resource.
+
+    We only want one datadog-agent running, so if we start more Tilt sessions we'll
+    deploy this resource stub as a stand-in to fulfill `resource_deps` references on
+    Tilt resources which rely on it.
+
+    Tails logs from the Kubernetes `datadog-cluster-agent` deployment.
+    """
     local_resource(
         workload_name,
         serve_cmd = [
