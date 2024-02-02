@@ -26,11 +26,13 @@ from variables import (
 
 
 def serve():
+    """Serve the extension operator, which asynchronously handles state changes."""
     optr = ExtensionOperator()
     asyncio.run(optr.run())
 
 
 def remote(keyfile_path: str):
+    """Interact with an existing operator to enable the Datadog Agent."""
     optr_ui = get_or_create_datadog_operator()
     handle_config_changes(keyfile_path)
 
@@ -39,6 +41,7 @@ def remote(keyfile_path: str):
 
 
 def handle_config_changes(keyfile_path):
+    """Store Datadog credentials in dotfile and Kubernetes secret."""
     datadog_api_key = os.getenv("DATADOG_API_KEY", "")
     datadog_app_key = os.getenv("DATADOG_APP_KEY", "")
 
@@ -52,12 +55,14 @@ def handle_config_changes(keyfile_path):
 
 
 def get_session_ports():
+    """Return list of Tilt UISession port IP addresses."""
     cm = kubectl_get(K8S_CONFIGMAP_SESSIONS)
     sessions = cm.get("data", {})
     return list(sessions.keys())
 
 
 def get_or_create_datadog_operator():
+    """Create Tilt UIResource for the Datadog extension operator."""
     kwargs = {"toggle_args": {"resources": "datadog-operator"}}
 
     for session_port in get_session_ports():
