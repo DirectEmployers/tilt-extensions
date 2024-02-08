@@ -17,11 +17,14 @@ workload_name = "datadog-agent"
 button_name = "de-remote:toggle-datadog-agent"
 
 
-def datadog_up():
+def datadog_up(agent_image_tag = None):
     """Main function for this Tilt extension.
 
     Creates necessary resources for the Datadog Agent to run and be shared across
     multiple Tilt sessions.
+
+    Args:
+      agent_image_tag: Sets a specific image tag version for the Datadog Agent.
     """
     port = current_port()
     operator_port = which_sessions("uiresource", "datadog-operator")
@@ -41,7 +44,7 @@ def datadog_up():
                 + " • Get Application Key: https://app.datadoghq.com/organization-settings/application-keys"
             )
 
-        helm_resources()
+        helm_resources(agent_image_tag)
     else:
         # Stub datadog-agent resource (for resource_deps compatibility)
         stub_resource()
@@ -129,23 +132,35 @@ def datadog_keys_secret():
     )
 
 
-def helm_resources():
-    """Create Tilt resources required to install Datadog Agent from Helm charts."""
+def helm_resources(agent_image_tag = None):
+    """Create Tilt resources required to install Datadog Agent from Helm charts.
+
+    Args:
+      agent_image_tag: Sets a specific image tag version for the Datadog Agent.
+    """
     helm_repo(
         "helm-datadog-repo",
         "https://helm.datadoghq.com",
         labels = ["datadog"],
     )
 
+    flags = []
+
     chart_values = os.path.join(extension_path, "values.yaml")
+    flags.append(["--values", chart_values])
+
+    if agent_image_tag:
+        flags.append(["--set", "agents.image.tag=%s" % agent_image_tag])
+        flags.append(["--set", "clusterAgent.image.tag=%s" % agent_image_tag])
+        flags.append(["--set", "clusterChecksRunner.image.tag=%s" % agent_image_tag])
+    else:
+        agent_image_tag = "latest"
+
     helm_resource(
         workload_name,
         chart = "helm-datadog-repo/datadog",
-        release_name = "datadog",
-        flags = [
-            "--values",
-            chart_values,
-        ],
+        release_name = "datadog-agent-%s" % agent_image_tag,
+        flags = flags,
         deps = [
             dd_key_file,
             chart_values,
