@@ -138,6 +138,7 @@ def helm_resources(agent_image_tag = None):
     Args:
       agent_image_tag: Sets a specific image tag version for the Datadog Agent.
     """
+    release_name = "datadog-agent"
     helm_repo(
         "helm-datadog-repo",
         "https://helm.datadoghq.com",
@@ -153,13 +154,15 @@ def helm_resources(agent_image_tag = None):
         flags.append(["--set", "agents.image.tag=%s" % agent_image_tag])
         flags.append(["--set", "clusterAgent.image.tag=%s" % agent_image_tag])
         flags.append(["--set", "clusterChecksRunner.image.tag=%s" % agent_image_tag])
+
+        release_name = "%s-%s" % (release_name, agent_image_tag.replace(".", "-"))
     else:
-        agent_image_tag = "latest"
+        release_name = "%s-latest" % release_name
 
     helm_resource(
         workload_name,
         chart = "helm-datadog-repo/datadog",
-        release_name = "datadog-agent-%s" % agent_image_tag,
+        release_name = release_name,
         flags = flags,
         deps = [
             dd_key_file,
