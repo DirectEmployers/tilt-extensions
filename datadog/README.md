@@ -20,8 +20,12 @@ datadog_up()
 ```
 
 If you need to lock a project  to a specific Datadog Agent image tag/version, you can provide a valid image tag as an 
-argument to `datadog_up`:
+argument to `datadog_up`.
 
 ```starlark
 datadog_up(agent_image_tag = "7.50.3")
 ```
+> **Note**: If multiple Tilt sessions are started, the Datadog extension will only be able to respect the arguments 
+> of a single session (likely the first place the Datadog extension is invoked). This could result in surprising and 
+> unexpected results, but would only occur in the rare circumstance that multiple Tilt sessions would be required in 
+> the first place.
