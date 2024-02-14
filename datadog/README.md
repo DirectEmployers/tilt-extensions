@@ -16,5 +16,12 @@ Datadog resources on and off. Datadog API and App keys are required and can be a
 ```starlark
 load("ext://datadog", "datadog_up")
 
-datadog_up()  # This does not accept any arguments at this time.
+datadog_up()
+```
+
+If you need to lock a project  to a specific Datadog Agent image tag/version, you can provide a valid image tag as an 
+argument to `datadog_up`:
+
+```starlark
+datadog_up(agent_image_tag = "7.50.3")
 ```
