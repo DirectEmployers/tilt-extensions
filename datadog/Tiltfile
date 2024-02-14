@@ -145,15 +145,13 @@ def helm_resources(agent_image_tag = None):
         labels = ["datadog"],
     )
 
-    flags = []
-
     chart_values = os.path.join(extension_path, "values.yaml")
-    flags.append(["--values", chart_values])
+    flags = ["--values", chart_values]
 
     if agent_image_tag:
-        flags.append(["--set", "agents.image.tag=%s" % agent_image_tag])
-        flags.append(["--set", "clusterAgent.image.tag=%s" % agent_image_tag])
-        flags.append(["--set", "clusterChecksRunner.image.tag=%s" % agent_image_tag])
+        flags.extend(["--set", "agents.image.tag=%s" % agent_image_tag])
+        flags.extend(["--set", "clusterAgent.image.tag=%s" % agent_image_tag])
+        flags.extend(["--set", "clusterChecksRunner.image.tag=%s" % agent_image_tag])
 
         release_name = "%s-%s" % (release_name, agent_image_tag.replace(".", "-"))
     else:
