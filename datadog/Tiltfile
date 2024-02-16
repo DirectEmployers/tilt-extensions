@@ -145,7 +145,7 @@ def _validate_agent_version(agent_version):
     errors = []
     semverish = agent_version.split(".")
     if int(semverish[0]) < MINIMUM_AGENT_VERSION:
-        errors.append("Datadog Extension: Agent version must be >= %d." % MINIMUM_AGENT_VERSION)
+        errors.append("Datadog Extension: Agent version must be ≥ %d." % MINIMUM_AGENT_VERSION)
 
     if len(semverish) > 3 or any(["-" in i for i in semverish]):
         errors.append("Datadog Extension: Agent version must be in semver notation.")
@@ -153,11 +153,11 @@ def _validate_agent_version(agent_version):
     for e in errors:
         warn(e)
 
-    # Last ditch effect to ensure this is a valid X.X.X version number.
-    all([int(i) for i in semverish])
-
     if errors:
         fail("Datadog Extension: Invalid version tag '%s'; see warnings above." % agent_version)
+
+    # Last ditch effort to ensure this is a usable version number.
+    all([int(i) for i in semverish])
 
 
 def _helm_resources(agent_version = DEFAULT_AGENT_TAG):
