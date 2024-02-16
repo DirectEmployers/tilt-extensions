@@ -33,10 +33,10 @@ def datadog_up(agent_version = DEFAULT_AGENT_TAG):
     port = current_port()
     operator_port = which_sessions("uiresource", "datadog-operator")
 
-    datadog_button()
+    _datadog_button()
 
     if not operator_port or port == operator_port:
-        datadog_operator()
+        _datadog_operator()
 
         if os.path.exists(DD_KEY_FILE):
             _datadog_keys_secret()
@@ -48,13 +48,13 @@ def datadog_up(agent_version = DEFAULT_AGENT_TAG):
                 + " • Get Application Key: https://app.datadoghq.com/organization-settings/application-keys"
             )
 
-        helm_resources(agent_image_tag)
+        _helm_resources(agent_version)
     else:
         # Stub datadog-agent resource (for resource_deps compatibility)
-        stub_resource()
+        _stub_resource()
 
 
-def dotenv(path, default = {}):
+def _dotenv(path, default = {}):
     """Read a local envfile/dotfile into a dict, or returns `default`."""
     env = read_file(path, "")
 
@@ -64,7 +64,7 @@ def dotenv(path, default = {}):
     return {k: v for k, v in [l.split("=") for l in str(env).split("\n") if l]}
 
 
-def datadog_operator():
+def _datadog_operator():
     """Create datadog-operator resource, a state-management background process.
 
     Manages UIButton presses and maintains state between Tilt sessions.
@@ -80,7 +80,7 @@ def datadog_operator():
     )
 
 
-def datadog_button():
+def _datadog_button():
     """Create Tilt UIButton resource to toggle Datadog Agent and take credentials.
 
     The button runs scripts and sends signals to the datadog-operator to ensure that
@@ -116,7 +116,7 @@ def datadog_button():
     )
 
 
-def datadog_keys_secret():
+def _datadog_keys_secret():
     """Create Kubernetes secret to store Datadog credentials.
 
     If no keys are found via local dotfile, they will be generated from provided
@@ -136,11 +136,11 @@ def datadog_keys_secret():
     )
 
 
-def helm_resources(agent_image_tag = None):
+def _helm_resources(agent_version = DEFAULT_AGENT_TAG):
     """Create Tilt resources required to install Datadog Agent from Helm charts.
 
     Args:
-      agent_image_tag: Sets a specific image tag version for the Datadog Agent.
+      agent_version: Sets a specific image tag version for the Datadog Agent.
     """
     release_name = "datadog-agent"
     helm_repo(
@@ -152,14 +152,9 @@ def helm_resources(agent_image_tag = None):
     chart_values = os.path.join(EXTENSION_PATH, "values.yaml")
     flags = ["--values", chart_values]
 
-    if agent_image_tag:
-        flags.extend(["--set", "agents.image.tag=%s" % agent_image_tag])
-        flags.extend(["--set", "clusterAgent.image.tag=%s" % agent_image_tag])
-        flags.extend(["--set", "clusterChecksRunner.image.tag=%s" % agent_image_tag])
-
-        release_name = "%s-%s" % (release_name, agent_image_tag.replace(".", "-"))
-    else:
-        release_name = "%s-latest" % release_name
+    flags.extend(["--set", "agents.image.tag=%s" % agent_version])
+    flags.extend(["--set", "clusterAgent.image.tag=%s" % agent_version])
+    flags.extend(["--set", "clusterChecksRunner.image.tag=%s" % agent_version])
 
     helm_resource(
         WORKLOAD_NAME,
@@ -179,7 +174,7 @@ def helm_resources(agent_image_tag = None):
     )
 
 
-def stub_resource():
+def _stub_resource():
     """Create Tilt resource that acts as a stub for the real datadog-agent resource.
 
     We only want one datadog-agent running, so if we start more Tilt sessions we'll
