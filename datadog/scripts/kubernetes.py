@@ -48,3 +48,16 @@ async def kubectl_watch(
 
     async for line in async_run(args):
         yield json.loads(line)
+
+
+def kubectl_create_secret_from_env_file(resource: str, from_env_file: str):
+    args = [
+        "kubectl",
+        "create",
+        "secret",
+        "generic",
+        resource,
+        f"--from-env-file={from_env_file}",
+    ]
+
+    return run(args)

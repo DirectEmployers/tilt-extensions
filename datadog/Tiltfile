@@ -7,48 +7,70 @@ load("../local_config/Tiltfile", "app_config_path")
 load("../tilt_sessions/Tiltfile", "which_sessions", "current_port")
 
 
-extension_path = os.getcwd()
-dd_user_config_path = app_config_path("directemployers/datadog")
-dd_settings_file = os.path.join(dd_user_config_path, ".settings.env")
-dd_key_file = os.path.join(dd_user_config_path, ".keys.env")
+EXTENSION_PATH = os.getcwd()
+DD_USER_CONFIG_PATH = app_config_path("directemployers/datadog")
+DD_KEY_FILE = os.path.join(DD_USER_CONFIG_PATH, ".keys.env")
 
-workload_name = "datadog-agent"
-button_name = "de-remote:toggle-datadog-agent"
+WORKLOAD_NAME = "datadog-agent"
+BUTTON_NAME = "de-remote:toggle-datadog-agent"
+
+DEFAULT_AGENT_TAG = "7"
+MINIMUM_AGENT_VERSION = 7
 
 
-def datadog_up():
+# Tell Tilt not to watch/reload when configuration files update.
+watch_settings(DD_USER_CONFIG_PATH)
+
+
+def datadog_up(agent_version = DEFAULT_AGENT_TAG):
+    """Main function for this Tilt extension.
+
+    Creates necessary resources for the Datadog Agent to run and be shared across
+    multiple Tilt sessions.
+
+    Args:
+      agent_version: Set a specific version tag for Datadog Agent images.
+    """
     port = current_port()
     operator_port = which_sessions("uiresource", "datadog-operator")
 
-    if not operator_port or port == operator_port:
-        datadog_operator()
+    _datadog_button()
 
-        if os.path.exists(dd_key_file):
-            datadog_keys_secret()
-            helm_resources()
+    if not operator_port or port == operator_port:
+        _datadog_operator()
+
+        if os.path.exists(DD_KEY_FILE):
+            _datadog_keys_secret()
         else:
             warn(
-                "Datadog keys are required to use datadog-agent: No keys were found in",
-                dd_key_file,
+                "Warning: Datadog API and App keys are required to use the Datadog "
+                + "Cluster Agent, you can set them from the Datadog button dropdown.\n"
+                + " • Get API Key: https://app.datadoghq.com/organization-settings/api-keys\n"
+                + " • Get Application Key: https://app.datadoghq.com/organization-settings/application-keys"
             )
+
+        _helm_resources(agent_version)
     else:
         # Stub datadog-agent resource (for resource_deps compatibility)
-        stub_resource()
-
-    datadog_button()
+        _stub_resource()
 
 
-def dotenv(path, default = None):
-    env = read_file(path)
+def _dotenv(path, default = {}):
+    """Read a local envfile/dotfile into a dict, or returns `default`."""
+    env = read_file(path, "")
 
     if not env:
-        return default or {}
+        return default
 
     return {k: v for k, v in [l.split("=") for l in str(env).split("\n") if l]}
 
 
-def datadog_operator():
-    scripts_root = os.path.join(extension_path, "scripts")
+def _datadog_operator():
+    """Create datadog-operator resource, a state-management background process.
+
+    Manages UIButton presses and maintains state between Tilt sessions.
+    """
+    scripts_root = os.path.join(EXTENSION_PATH, "scripts")
     script = os.path.join(scripts_root, "datadog.py")
 
     local_resource(
@@ -59,26 +81,31 @@ def datadog_operator():
     )
 
 
-def datadog_button():
-    keys = dotenv(dd_key_file)
-    script = os.path.join(extension_path, "scripts/datadog.py")
-    icon_off = read_file(os.path.join(extension_path, "assets/datadog-disabled.svg"))
+def _datadog_button():
+    """Create Tilt UIButton resource to toggle Datadog Agent and take credentials.
+
+    The button runs scripts and sends signals to the datadog-operator to ensure that
+    the Datadog Agent assumes the correct state across Tilt sessions.
+    """
+    keys = _dotenv(DD_KEY_FILE)
+    script = os.path.join(EXTENSION_PATH, "scripts/datadog.py")
+    icon_off = read_file(os.path.join(EXTENSION_PATH, "assets/datadog-disabled.svg"))
 
     cmd_button(
-        name = button_name,
-        argv = ["python", script, "remote"],
+        name = BUTTON_NAME,
+        argv = ["python", script, "remote", DD_KEY_FILE],
         text = "Enable Datadog",
         location = location.NAV,
         icon_svg = icon_off,
         inputs = [
             text_input(
                 "DATADOG_API_KEY",
-                default = keys.get("api-key"),
+                default = keys.get("api-key", ""),
                 label = "Enter a Datadog API key (https://app.datadoghq.com/organization-settings/api-keys)",
             ),
             text_input(
                 "DATADOG_APP_KEY",
-                default = keys.get("app-key"),
+                default = keys.get("app-key", ""),
                 label = "Enter a Datadog application key (https://app.datadoghq.com/organization-settings/application-keys)",
             ),
             v1alpha1.ui_input_spec(
@@ -90,12 +117,17 @@ def datadog_button():
     )
 
 
-def datadog_keys_secret():
-    print("Datadog keys found:", dd_key_file)
+def _datadog_keys_secret():
+    """Create Kubernetes secret to store Datadog credentials.
+
+    If no keys are found via local dotfile, they will be generated from provided
+    values on Tilt UI button press.
+    """
+    print("Datadog keys found:", DD_KEY_FILE)
 
     secret_create_generic(
         "datadog-keys",
-        from_env_file = dd_key_file,
+        from_env_file = DD_KEY_FILE,
     )
 
     k8s_resource(
@@ -105,24 +137,57 @@ def datadog_keys_secret():
     )
 
 
-def helm_resources():
+def _validate_agent_version(agent_version):
+    """Fail with errors if provided agent version tag is incompatible with extension."""
+    if agent_version == "latest":
+        return
+
+    errors = []
+    semverish = agent_version.split(".")
+    if int(semverish[0]) < MINIMUM_AGENT_VERSION:
+        errors.append("Datadog Extension: Agent version must be ≥ %d." % MINIMUM_AGENT_VERSION)
+
+    if len(semverish) > 3 or any(["-" in i for i in semverish]):
+        errors.append("Datadog Extension: Agent version must be in semver notation.")
+
+    for e in errors:
+        warn(e)
+
+    if errors:
+        fail("Datadog Extension: Invalid version tag '%s'; see warnings above." % agent_version)
+
+    # Last ditch effort to ensure this is a usable version number.
+    all([int(i) for i in semverish])
+
+
+def _helm_resources(agent_version = DEFAULT_AGENT_TAG):
+    """Create Tilt resources required to install Datadog Agent from Helm charts.
+
+    Args:
+      agent_version: Sets a specific image tag version for the Datadog Agent.
+    """
+    release_name = "datadog-agent"
     helm_repo(
         "helm-datadog-repo",
         "https://helm.datadoghq.com",
         labels = ["datadog"],
     )
 
-    chart_values = os.path.join(extension_path, "values.yaml")
+    chart_values = os.path.join(EXTENSION_PATH, "values.yaml")
+    flags = ["--values", chart_values]
+
+    _validate_agent_version(agent_version)
+    flags.extend(["--set", "agents.image.tag=%s" % agent_version])
+    flags.extend(["--set", "clusterAgent.image.tag=%s" % agent_version])
+    flags.extend(["--set", "clusterChecksRunner.image.tag=%s" % agent_version])
+
     helm_resource(
-        workload_name,
+        WORKLOAD_NAME,
         chart = "helm-datadog-repo/datadog",
-        release_name = "datadog",
-        flags = [
-            "--values",
-            chart_values,
-        ],
+        release_name = release_name,
+        flags = flags,
         deps = [
-            dd_key_file,
+            DD_KEY_FILE,
             chart_values,
         ],
         resource_deps = [
@@ -133,9 +198,18 @@ def helm_resources():
         auto_init = False,
     )
 
-def stub_resource():
+
+def _stub_resource():
+    """Create Tilt resource that acts as a stub for the real datadog-agent resource.
+
+    We only want one datadog-agent running, so if we start more Tilt sessions we'll
+    deploy this resource stub as a stand-in to fulfill `resource_deps` references on
+    Tilt resources which rely on it.
+
+    Tails logs from the Kubernetes `datadog-cluster-agent` deployment.
+    """
     local_resource(
-        workload_name,
+        WORKLOAD_NAME,
         serve_cmd = [
             "kubectl",
             "logs",

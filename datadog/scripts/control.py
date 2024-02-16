@@ -1,8 +1,15 @@
 import asyncio
+import os
 import time
 from asyncio import Task
+from pathlib import Path
 
-from kubernetes import kubectl_get, kubectl_wait, kubectl_watch
+from kubernetes import (
+    kubectl_create_secret_from_env_file,
+    kubectl_get,
+    kubectl_wait,
+    kubectl_watch,
+)
 from tilt import TiltUIButton, TiltUIResource, tilt_get
 from variables import (
     BUTTON_DISABLED_PATCH,
@@ -19,28 +26,49 @@ from variables import (
 
 
 def serve():
+    """Serve the extension operator, which asynchronously handles state changes."""
     optr = ExtensionOperator()
     asyncio.run(optr.run())
 
 
-def remote():
+def remote(keyfile_path: str):
+    """Interact with an existing operator to enable the Datadog Agent."""
     optr_ui = get_or_create_datadog_operator()
+    handle_config_changes(keyfile_path)
 
     if not optr_ui.is_enabled:
         optr_ui.enable(wait=True)
 
 
+def handle_config_changes(keyfile_path):
+    """Store Datadog credentials in dotfile and Kubernetes secret."""
+    datadog_api_key = os.getenv("DATADOG_API_KEY", "")
+    datadog_app_key = os.getenv("DATADOG_APP_KEY", "")
+
+    if datadog_api_key or datadog_app_key:
+        Path(keyfile_path).parent.mkdir(parents=True, exist_ok=True)
+        with open(keyfile_path, "w") as f:
+            f.write(f"api-key={datadog_api_key}\n")
+            f.write(f"app-key={datadog_app_key}\n")
+
+    kubectl_create_secret_from_env_file("datadog-keys", from_env_file=keyfile_path)
+
+
 def get_session_ports():
+    """Return list of Tilt UISession port IP addresses."""
     cm = kubectl_get(K8S_CONFIGMAP_SESSIONS)
     sessions = cm.get("data", {})
     return list(sessions.keys())
 
 
 def get_or_create_datadog_operator():
+    """Create Tilt UIResource for the Datadog extension operator."""
+    kwargs = {"toggle_args": {"resources": "datadog-operator"}}
+
     for session_port in get_session_ports():
         if tilt_get(TILT_UIRESOURCE_DATADOG_OPERATOR, port=session_port):
-            return TiltUIResource("datadog-operator", port=session_port)
-    return TiltUIResource("datadog-operator", port=SESSION_PORT)
+            return TiltUIResource("datadog-operator", port=session_port, **kwargs)
+    return TiltUIResource("datadog-operator", port=SESSION_PORT, **kwargs)
 
 
 class SessionController:
@@ -61,8 +89,8 @@ class SessionController:
         self.operator = get_or_create_datadog_operator()
         self.workload = TiltUIResource(
             "datadog-agent",
-            toggle_args={"labels": "datadog"},
             port=self.port,
+            toggle_args={"labels": "datadog"},
         )
         self.button = TiltUIButton(
             "de-remote:toggle-datadog-agent",

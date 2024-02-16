@@ -1,0 +1,43 @@
+"""Find Windows or *nix local settings path."""
+
+
+def windows_user_home():
+    home = os.environ.get("USERPROFILE")
+    homedrive = os.environ.get("HOMEDRIVE")
+    homepath = os.environ.get("HOMEPATH")
+
+    if not home and homedrive and homepath:
+        home = os.path.join(homedrive, homepath) or None
+
+    return home
+
+
+def user_home():
+    if os.name == "nt":
+        home = windows_user_home()
+    else:
+        home = os.environ.get("HOME")
+
+    if not home:
+        home = "~"
+
+    return home
+
+
+def user_config_root():
+    if os.name == "nt":
+        config_root = os.environ.get(
+            "LOCALAPPDATA",
+            os.path.join(user_home(), "AppData/Local/")
+        )
+    else:
+        config_root = os.environ.get(
+            "XDG_CONFIG_HOME",
+            os.path.join(user_home(), ".local/share/")
+        )
+
+    return config_root
+
+
+def app_config_path(app_subpath):
+    return os.path.join(user_config_root(), app_subpath)

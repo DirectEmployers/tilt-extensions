@@ -176,7 +176,7 @@ class TiltAPIResource:
 
     @property
     def properties(self):
-        return tilt_get(self.canonical_name, port=self.port)
+        return tilt_get(self.canonical_name, port=self.port) or {}
 
     def exists(self) -> bool:
         return bool(self.properties)
@@ -284,13 +284,16 @@ class TiltUIResource(TiltAPIResource):
         return "uiresource"
 
     def _test_status(self) -> bool:
-        status = self.properties["status"]["disableStatus"]["state"]
-        return status == "Enabled"
+        try:
+            status = self.properties["status"]["disableStatus"]["state"]
+            return status == "Enabled"
+        except KeyError:
+            return False
 
     def _push_state(self, enable: bool = True):
         tilt_xable(enable=enable, port=self.port, **self.toggle_args)
 
-        trigger_mode = self.properties["status"].get("triggerMode")
+        trigger_mode = self.properties.get("status", {}).get("triggerMode")
         if enable and trigger_mode is not None:
             print(f"Triggering {self.canonical_name}")
             tilt_trigger(self.name, port=self.port)
