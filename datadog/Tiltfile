@@ -7,14 +7,14 @@ load("../local_config/Tiltfile", "app_config_path")
 load("../tilt_sessions/Tiltfile", "which_sessions", "current_port")
 
 
-extension_path = os.getcwd()
-dd_user_config_path = app_config_path("directemployers/datadog")
-dd_key_file = os.path.join(dd_user_config_path, ".keys.env")
+EXTENSION_PATH = os.getcwd()
+DD_USER_CONFIG_PATH = app_config_path("directemployers/datadog")
+DD_KEY_FILE = os.path.join(DD_USER_CONFIG_PATH, ".keys.env")
 
 watch_settings(dd_user_config_path)
+WORKLOAD_NAME = "datadog-agent"
+BUTTON_NAME = "de-remote:toggle-datadog-agent"
 
-workload_name = "datadog-agent"
-button_name = "de-remote:toggle-datadog-agent"
 
 
 def datadog_up(agent_image_tag = None):
@@ -34,8 +34,8 @@ def datadog_up(agent_image_tag = None):
     if not operator_port or port == operator_port:
         datadog_operator()
 
-        if os.path.exists(dd_key_file):
-            datadog_keys_secret()
+        if os.path.exists(DD_KEY_FILE):
+            _datadog_keys_secret()
         else:
             warn(
                 "Warning: Datadog API and App keys are required to use the Datadog "
@@ -65,7 +65,7 @@ def datadog_operator():
 
     Manages UIButton presses and maintains state between Tilt sessions.
     """
-    scripts_root = os.path.join(extension_path, "scripts")
+    scripts_root = os.path.join(EXTENSION_PATH, "scripts")
     script = os.path.join(scripts_root, "datadog.py")
 
     local_resource(
@@ -82,13 +82,13 @@ def datadog_button():
     The button runs scripts and sends signals to the datadog-operator to ensure that
     the Datadog Agent assumes the correct state across Tilt sessions.
     """
-    keys = dotenv(dd_key_file)
-    script = os.path.join(extension_path, "scripts/datadog.py")
-    icon_off = read_file(os.path.join(extension_path, "assets/datadog-disabled.svg"))
+    keys = _dotenv(DD_KEY_FILE)
+    script = os.path.join(EXTENSION_PATH, "scripts/datadog.py")
+    icon_off = read_file(os.path.join(EXTENSION_PATH, "assets/datadog-disabled.svg"))
 
     cmd_button(
-        name = button_name,
-        argv = ["python", script, "remote", dd_key_file],
+        name = BUTTON_NAME,
+        argv = ["python", script, "remote", DD_KEY_FILE],
         text = "Enable Datadog",
         location = location.NAV,
         icon_svg = icon_off,
@@ -118,11 +118,11 @@ def datadog_keys_secret():
     If no keys are found via local dotfile, they will be generated from provided
     values on Tilt UI button press.
     """
-    print("Datadog keys found:", dd_key_file)
+    print("Datadog keys found:", DD_KEY_FILE)
 
     secret_create_generic(
         "datadog-keys",
-        from_env_file = dd_key_file,
+        from_env_file = DD_KEY_FILE,
     )
 
     k8s_resource(
@@ -145,7 +145,7 @@ def helm_resources(agent_image_tag = None):
         labels = ["datadog"],
     )
 
-    chart_values = os.path.join(extension_path, "values.yaml")
+    chart_values = os.path.join(EXTENSION_PATH, "values.yaml")
     flags = ["--values", chart_values]
 
     if agent_image_tag:
@@ -158,12 +158,12 @@ def helm_resources(agent_image_tag = None):
         release_name = "%s-latest" % release_name
 
     helm_resource(
-        workload_name,
+        WORKLOAD_NAME,
         chart = "helm-datadog-repo/datadog",
         release_name = release_name,
         flags = flags,
         deps = [
-            dd_key_file,
+            DD_KEY_FILE,
             chart_values,
         ],
         resource_deps = [
@@ -185,7 +185,7 @@ def stub_resource():
     Tails logs from the Kubernetes `datadog-cluster-agent` deployment.
     """
     local_resource(
-        workload_name,
+        WORKLOAD_NAME,
         serve_cmd = [
             "kubectl",
             "logs",
