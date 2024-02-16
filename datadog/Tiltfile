@@ -11,20 +11,24 @@ EXTENSION_PATH = os.getcwd()
 DD_USER_CONFIG_PATH = app_config_path("directemployers/datadog")
 DD_KEY_FILE = os.path.join(DD_USER_CONFIG_PATH, ".keys.env")
 
-watch_settings(dd_user_config_path)
 WORKLOAD_NAME = "datadog-agent"
 BUTTON_NAME = "de-remote:toggle-datadog-agent"
 
+DEFAULT_AGENT_TAG = "7"
 
 
-def datadog_up(agent_image_tag = None):
+# Tell Tilt not to watch/reload when configuration files update.
+watch_settings(DD_USER_CONFIG_PATH)
+
+
+def datadog_up(agent_version = DEFAULT_AGENT_TAG):
     """Main function for this Tilt extension.
 
     Creates necessary resources for the Datadog Agent to run and be shared across
     multiple Tilt sessions.
 
     Args:
-      agent_image_tag: Sets a specific image tag version for the Datadog Agent.
+      agent_version: Set a specific version tag for Datadog Agent images.
     """
     port = current_port()
     operator_port = which_sessions("uiresource", "datadog-operator")
