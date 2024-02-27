@@ -4,8 +4,28 @@ SCRIPTS = os.path.join(os.getcwd(), "scripts")
 CONFIGMAP_NAME = "tilt-active-sessions"
 
 
-def cmd(command, quiet = True, command_bat = "", echo_off = True, env = {}, dir = "", stdin = ""):
-    output = local(command, quiet, command_bat, echo_off, env, dir, stdin)
+def cmd(
+    command,
+    quiet = True,
+    command_bat = None,
+    echo_off = True,
+    env = None,
+    dir = None,
+    stdin = None,
+):
+    kwargs = {}
+
+    # Handle optional keywork arguments
+    if command_bat != None:
+        kwargs["command_bat"] = command_bat
+    if env != None:
+        kwargs["env"] = env
+    if dir != None:
+        kwargs["dir"] = dir
+    if stdin != None:
+        kwargs["stdin"] = stdin
+
+    output = local(command, quiet=quiet, echo_off=echo_off, **kwargs)
     return str(output).strip()
 
 
