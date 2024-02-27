@@ -64,8 +64,9 @@ def get_session(port = None):
 
 
 def is_active(port = None):
-    script = os.path.join(SCRIPTS, "verify-active.sh")
-    return bool(cmd([script, port]))
+    shell = os.path.join(SCRIPTS, "verify-active.sh")
+    batch = os.path.join(SCRIPTS, "verify-active.bat")
+    return bool(cmd([shell, port], command_bat=[batch, port]))
 
 
 def configmap_exists():
