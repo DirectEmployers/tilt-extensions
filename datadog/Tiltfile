@@ -14,7 +14,7 @@ DD_KEY_FILE = os.path.join(DD_USER_CONFIG_PATH, ".keys.env")
 WORKLOAD_NAME = "datadog-agent"
 BUTTON_NAME = "de-remote:toggle-datadog-agent"
 
-DEFAULT_AGENT_TAG = "7"
+DEFAULT_AGENT_TAG = "latest"
 MINIMUM_AGENT_VERSION = 7
 
 
