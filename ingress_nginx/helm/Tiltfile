@@ -5,7 +5,8 @@ REPO_ALIAS = "ingress-nginx-repo"
 LABEL = "ingress"
 
 def load_helmchart(resource_deps = [], labels = []):
-    resource_deps.append(REPO_ALIAS)
+    dependencies = [REPO_ALIAS]
+    dependencies.append(resource_deps)
 
     helm_repo(
         REPO_ALIAS,
