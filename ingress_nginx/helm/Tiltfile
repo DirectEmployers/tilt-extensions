@@ -5,6 +5,8 @@ REPO_ALIAS = "ingress-nginx-repo"
 LABEL = "ingress"
 
 def load_helmchart(resource_deps = [], labels = []):
+    resource_deps.append(REPO_ALIAS)
+
     helm_repo(
         REPO_ALIAS,
         url = "https://kubernetes.github.io/ingress-nginx",
@@ -20,6 +22,6 @@ def load_helmchart(resource_deps = [], labels = []):
             "--set=controller.allowSnippetAnnotations=true",
             "--set=controller.ingressClassResource.default=true",
         ],
-        resource_deps = [REPO_ALIAS].extend(resource_deps),
+        resource_deps = resource_deps,
         labels = labels or [LABEL],
     )
