@@ -23,6 +23,6 @@ def load_helmchart(resource_deps = [], labels = []):
             "--set=controller.allowSnippetAnnotations=true",
             "--set=controller.ingressClassResource.default=true",
         ],
-        resource_deps = resource_deps,
+        resource_deps = dependencies,
         labels = labels or [LABEL],
     )
