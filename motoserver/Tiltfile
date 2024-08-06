@@ -1,0 +1,47 @@
+load("ext://uibutton", "cmd_button")
+load("../devcore/Tiltfile", "tilt_port")
+
+extension_root = os.getcwd()
+
+
+def motoserver_up(add_buttons = True):
+    """Deploy MotoServer using Docker and Kubernetes."""
+
+    docker_build(
+        "motoserver-persistence",
+        context="./src/",
+        dockerfile="./Dockerfile",
+    )
+
+    k8s_yaml([
+        "k8s/moto-statefulset.yaml",
+        "k8s/moto-service.yaml",
+    ])
+
+    k8s_resource(
+        "motoserver",
+        port_forwards=[
+            "motoserver:3000:3000",
+        ],
+        links=[
+            "http://motoserver:3000/moto-api/",
+        ],
+    )
+
+    if add_buttons:
+        add_ui_buttons()
+
+
+def add_ui_buttons():
+    """Add UI Buttons to toggle MotoServer and reset data."""
+    port = tilt_port()
+
+    toggle_script = os.path.join(extension_root, "scripts/toggle.sh")
+    icon = "cloud" if "motoserver" in sys.argv or not sys.argv[2:] else "cloud_off"
+    cmd_button(
+        "motoserver:toggle",
+        argv = ["sh", toggle_script, port],
+        location = "nav",
+        icon_name = icon,
+        text = "Toggle MotoServer",
+    )

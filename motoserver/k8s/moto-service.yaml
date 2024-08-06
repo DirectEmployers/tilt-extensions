@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: motoserver
+  labels:
+    app: motoserver
+  annotations:
+    tilt.dev/down-policy: keep
+spec:
+  ports:
+  - port: 3000
+    name: motoserver
+  clusterIP: None
+  selector:
+    app: motoserver
