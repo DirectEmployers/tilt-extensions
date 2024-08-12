@@ -55,6 +55,9 @@ motoserver_up(
 )
 ```
 
+> **Note:** If you encounter trouble with string parsing, you can find more detail about how strings behave in the 
+> [Starlark documentation](https://github.com/bazelbuild/starlark/blob/master/spec.md).
+
 
 #### App Integration using environment variable
 After successfully starting, MotoServer should be available within the cluster at `http://motoserver:3000`. 
