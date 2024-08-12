@@ -2,6 +2,7 @@ import json
 import os
 import signal
 from pathlib import Path
+from subprocess import run
 
 from moto.moto_api import recorder
 from moto.server import ThreadedMotoServer, signal_handler
@@ -63,13 +64,22 @@ def restore_state(
         pass
 
 
+def run_init_script():
+    print("Initializing resources...")
+    run(["sh", "/motoserver/init.sh"])
+
+
 if __name__ == "__main__":
     # Start server
     server = ThreadedMotoServer(IP_ADDRESS, PORT)
     server.start()
 
+    # Restore prior state
     compact_state()
     restore_state(IP_ADDRESS, PORT)
+
+    # Initialize resources
+    run_init_script()
 
     # Keep server alive and prevent script from ending!
     print("MotosServer is ready!")
