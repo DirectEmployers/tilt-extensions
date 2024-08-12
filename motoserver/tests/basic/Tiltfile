@@ -1,0 +1,3 @@
+load("../../Tiltfile", "motoserver_up")
+
+motoserver_up()

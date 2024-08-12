@@ -34,6 +34,15 @@ spec:
         volumeMounts:
         - name: motoserver-storage
           mountPath: /usr/share/motoserver/
+        - name: init-script
+          mountPath: /motoserver/
+      volumes:
+      - name: init-script
+        configMap:
+          name: motoserver-init-script
+          items:
+            - key: init.sh
+              path: init.sh
   volumeClaimTemplates:
   - metadata:
       name: motoserver-storage
