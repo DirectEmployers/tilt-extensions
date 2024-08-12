@@ -9,8 +9,8 @@ def motoserver_up(add_buttons = True, labels = []):
 
     docker_build(
         "motoserver-persistence",
-        context="./src/",
-        dockerfile="./Dockerfile",
+        context=os.path.join(extension_root,"src/"),
+        dockerfile=os.path.join(extension_root, "Dockerfile"),
     )
 
     k8s_yaml([
