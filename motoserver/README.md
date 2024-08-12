@@ -25,11 +25,36 @@ v1alpha1.extension(
 ```
 
 ### Import and call the extension
+Here is the simplest way to get MotoServer running.
+
 ```starlark
 load("ext://motoserver", "motoserver_up")
 
 motoserver_up()
 ```
+
+You can also set any labels you may wish MotoServer resources to use:
+```starlark
+motoserver(labels=["motoserver", "support"])
+```
+
+### Provide an initialization script
+An init script can be provided via path or string using the `init_script` keyword argument. It will be added to a 
+ConfigMap and run during server startup by the Python script in `src/main.py`.
+
+```starlark
+motoserver_up(init_script="path/to/your/init.sh")
+
+# or with a string
+motoserver_up(
+    init_script="""
+    #!/usr/bin/env sh
+    echo "This is a placeholder for a MotoServer init script. See the extension readme for more details!"
+    echo "URL: https://github.com/DirectEmployers/tilt-extensions/blob/main/motoserver/README.md"
+    """
+)
+```
+
 
 #### App Integration using environment variable
 After successfully starting, MotoServer should be available within the cluster at `http://motoserver:3000`. 
