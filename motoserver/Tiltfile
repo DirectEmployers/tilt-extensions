@@ -14,8 +14,8 @@ def motoserver_up(add_buttons = True, labels = []):
     )
 
     k8s_yaml([
-        "k8s/moto-statefulset.yaml",
-        "k8s/moto-service.yaml",
+        os.path.join(extension_root, "k8s/moto-statefulset.yaml"),
+        os.path.join(extension_root, "k8s/moto-service.yaml"),
     ])
 
     k8s_resource(
