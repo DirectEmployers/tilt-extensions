@@ -4,33 +4,50 @@ load("../devcore/Tiltfile", "tilt_port")
 extension_root = os.getcwd()
 
 
-def motoserver_up(add_buttons = True, labels = []):
+def motoserver_up(init_script = "", labels = []):
     """Deploy MotoServer using Docker and Kubernetes."""
 
     docker_build(
         "motoserver-persistence",
-        context=os.path.join(extension_root,"src/"),
-        dockerfile=os.path.join(extension_root, "Dockerfile"),
+        context = os.path.join(extension_root, "src/"),
+        dockerfile = os.path.join(extension_root, "Dockerfile"),
     )
+
+    if not init_script:
+         init_script = read_file(os.path.join(extension_root, "scripts/init.sh"))
+    else:
+        # If `init_script` is a file path, return its contents. Otherwise, treat it as a string.
+        init_script = read_file(init_script, init_script)
 
     k8s_yaml([
         os.path.join(extension_root, "k8s/moto-statefulset.yaml"),
         os.path.join(extension_root, "k8s/moto-service.yaml"),
     ])
+    k8s_yaml(init_script_configmap_yaml("motoserver-init-script", init_script))
 
     k8s_resource(
         "motoserver",
-        port_forwards=[
-            "motoserver:3000:3000",
-        ],
-        links=[
-            "http://motoserver:3000/moto-api/",
-        ],
-        labels=labels,
+        port_forwards = ["motoserver:3000:3000"],
+        objects = ["motoserver-init-script:configmap"],
+        links = ["http://motoserver:3000/moto-api/"],
+        labels = labels,
     )
 
-    if add_buttons:
-        add_ui_buttons()
+    add_ui_buttons()
+
+
+def init_script_configmap_yaml(name, data):
+    template = {
+        "apiVersion": "v1",
+        "kind": "ConfigMap",
+        "metadata": {
+            "name": name,
+        },
+        "data": {
+            "init.sh": str(data)
+        },
+    }
+    return encode_yaml(template)
 
 
 def add_ui_buttons():
