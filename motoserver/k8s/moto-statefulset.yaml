@@ -28,6 +28,8 @@ spec:
             value: "3000"
           - name: MOTO_SERVER_IP
             value: "0.0.0.0"
+          - name: AWS_ENDPOINT_URL
+            value: "http://0.0.0.0:3000"
         ports:
         - containerPort: 3000
           name: motoserver
