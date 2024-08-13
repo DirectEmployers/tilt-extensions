@@ -20,16 +20,14 @@ spec:
         tty: true
         stdin: true
         env:
+          - name: MOTO_SERVER_IP
+            value: "0.0.0.0"
+          - name: MOTO_PORT
+            value: "3000"
           - name: MOTO_RECORDER_FILEPATH
             value: "/usr/share/motoserver/state.json"
           - name: MOTO_ENABLE_RECORDING
             value: "True"
-          - name: MOTO_PORT
-            value: "3000"
-          - name: MOTO_SERVER_IP
-            value: "0.0.0.0"
-          - name: AWS_ENDPOINT_URL
-            value: "http://0.0.0.0:3000"
         ports:
         - containerPort: 3000
           name: motoserver
