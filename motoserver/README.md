@@ -40,7 +40,9 @@ motoserver(labels=["motoserver", "support"])
 
 ### Provide an initialization script
 An init script can be provided via path or string using the `init_script` keyword argument. It will be added to a 
-ConfigMap and run during server startup by the Python script in `src/main.py`.
+ConfigMap and run during server startup by the Python script in `src/main.py`. Note: your init commands should be
+idempotent to prevent duplicate data or errors from occurring (i.e. use checks to prevent existing resources from
+being recreated).
 
 ```starlark
 motoserver_up(init_script="path/to/your/init.sh")
