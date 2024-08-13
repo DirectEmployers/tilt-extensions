@@ -44,6 +44,10 @@ ConfigMap and run during server startup by the Python script in `src/main.py`. N
 idempotent to prevent duplicate data or errors from occurring (i.e. use checks to prevent existing resources from
 being recreated).
 
+> **Important:** The default account ID is `123456789012`. If you have trouble finding resources which ought to exist,
+> please try again with an ARN which includes the default region and account ID
+> (i.e. arn:aws:sns:us-east-1:123456789012:test_topic).
+
 ```starlark
 motoserver_up(init_script="path/to/your/init.sh")
 
