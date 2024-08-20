@@ -1,0 +1,21 @@
+load("../../Tiltfile", "motoserver_up")
+
+
+motoserver_up(
+    init_script="""
+    #!/usr/bin/env sh
+    echo "Creating S3 Buckets"
+    aws s3api create-bucket --bucket gitops
+    aws s3api create-bucket --bucket jobsfs
+    aws s3api create-bucket --bucket de-microsites
+
+    echo "Creating SNS Topics and Subscriptions"
+    aws sns create-topic --name job_source_updates_s3
+    aws sns subscribe \
+        --protocol http \
+        --topic-arn arn:aws:sns:us-east-1:123456789012:job_source_updates_s3 \
+        --notification-endpoint http://imports-service-api.default.svc.cluster.local:8000/api/import
+
+    echo "Done."
+    """
+)

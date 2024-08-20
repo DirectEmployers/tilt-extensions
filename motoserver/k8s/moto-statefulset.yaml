@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: motoserver
+spec:
+  selector:
+    matchLabels:
+      app: motoserver
+  serviceName: "motoserver"
+  template:
+    metadata:
+      labels:
+        app: motoserver
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: motoserver
+        image: motoserver-persistence
+        imagePullPolicy: IfNotPresent
+        tty: true
+        stdin: true
+        env:
+          - name: MOTO_SERVER_IP
+            value: "0.0.0.0"
+          - name: MOTO_PORT
+            value: "3000"
+          - name: MOTO_RECORDER_FILEPATH
+            value: "/usr/share/motoserver/state.json"
+          - name: MOTO_ENABLE_RECORDING
+            value: "True"
+        ports:
+        - containerPort: 3000
+          name: motoserver
+        volumeMounts:
+        - name: motoserver-storage
+          mountPath: /usr/share/motoserver/
+        - name: init-script
+          mountPath: /motoserver/
+      volumes:
+      - name: init-script
+        configMap:
+          name: motoserver-init-script
+          items:
+            - key: init.sh
+              path: init.sh
+  volumeClaimTemplates:
+  - metadata:
+      name: motoserver-storage
+      annotations:
+        tilt.dev/down-policy: keep
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 100Mi

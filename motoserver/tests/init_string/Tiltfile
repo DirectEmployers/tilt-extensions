@@ -1,0 +1,10 @@
+load("../../Tiltfile", "motoserver_up")
+
+motoserver_up(
+    init_script="""
+    #!/usr/bin/env sh
+    echo "========================================"
+    echo "Test with init script passed via string!"
+    echo "========================================"
+    """
+)
