@@ -19,6 +19,8 @@ def load_helmchart(resource_deps = [], labels = []):
             "--create-namespace",
             "--set=controller.allowSnippetAnnotations=true",
             "--set=controller.ingressClassResource.default=true",
+            "--set=controller.hostNetwork=true",
+            "--set=controller.hostPort.enabled=true",
         ],
         resource_deps = [REPO_ALIAS] + resource_deps,
         labels = labels or [LABEL],
