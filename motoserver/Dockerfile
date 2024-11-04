@@ -1,4 +1,4 @@
-FROM motoserver/moto:5.0.12
+FROM motoserver/moto:5.0.19
 
 ENV AWS_ACCESS_KEY_ID="test" \
     AWS_SECRET_ACCESS_KEY="test" \
