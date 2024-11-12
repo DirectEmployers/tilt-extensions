@@ -4,7 +4,7 @@ load("../devcore/Tiltfile", "tilt_port")
 extension_root = os.getcwd()
 
 
-def motoserver_up(init_script = "", labels = []):
+def motoserver_up(init_script = "", **k8s_kwargs):
     """Deploy MotoServer using Docker and Kubernetes."""
 
     docker_build(
@@ -30,7 +30,7 @@ def motoserver_up(init_script = "", labels = []):
         port_forwards = ["motoserver:3000:3000"],
         objects = ["motoserver-init-script:configmap"],
         links = ["http://motoserver:3000/moto-api/"],
-        labels = labels,
+        **k8s_kwargs
     )
 
     add_ui_buttons()
