@@ -80,8 +80,7 @@ if __name__ == "__main__":
     server = ThreadedMotoServer(IP_ADDRESS, PORT)
     server.start()
 
-    # Initialize resources for state restoration
-    run_init_script()
+    # Initialize resources
     compact_state()
     # Restore prior state from state file.
     restore_state(IP_ADDRESS, PORT)
@@ -90,4 +89,5 @@ if __name__ == "__main__":
     print("MotosServer is ready!")
     # Start recording requests for state
     recorder.start_recording()
+    run_init_script()
     server._thread.join()
