@@ -3,10 +3,9 @@ import os
 import signal
 from pathlib import Path
 from subprocess import run
-import requests
 
 from moto.moto_api import recorder
-from moto.server import ThreadedMotoServer, signal_handler
+from moto.server import ThreadedMotoServer
 
 
 PORT = os.environ.get("MOTO_PORT", "5000")
@@ -14,14 +13,14 @@ IP_ADDRESS = os.environ.get("MOTO_SERVER_IP", "0.0.0.0")
 STATE_FILE = Path(os.environ.get("MOTO_RECORDER_FILEPATH"))
 
 
-def _signal_handler(signal, frame):
+def signal_handler(signal, frame):
    """Handle SIGINT and SIGTERM signals."""
-   requests.post(f"http://{IP_ADDRESS}:{PORT}/moto-api/recorder/stop-recording")
-   signal_handler(signal, frame)
+   recorder.stop_recording()
+   exit(0)
 
 try:
-    signal.signal(signal.SIGINT, _signal_handler)
-    signal.signal(signal.SIGTERM, _signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
 except ValueError:
     pass  # ignore "ValueError: signal only works in main thread"
 
@@ -81,14 +80,14 @@ if __name__ == "__main__":
     server = ThreadedMotoServer(IP_ADDRESS, PORT)
     server.start()
 
-    # Initialize resources
+    # Initialize resources for state restoration
     run_init_script()
-    # Restore prior state from state file.
     compact_state()
+    # Restore prior state from state file.
     restore_state(IP_ADDRESS, PORT)
 
     # Keep server alive and prevent script from ending!
     print("MotosServer is ready!")
     # Start recording requests for state
-    requests.post(f"http://{IP_ADDRESS}:{PORT}/moto-api/recorder/start-recording")
+    recorder.start_recording()
     server._thread.join()
