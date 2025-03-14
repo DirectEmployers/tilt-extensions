@@ -5,12 +5,18 @@ from pathlib import Path
 from subprocess import run
 
 from moto.moto_api import recorder
-from moto.server import ThreadedMotoServer, signal_handler
+from moto.server import ThreadedMotoServer
 
 
 PORT = os.environ.get("MOTO_PORT", "5000")
 IP_ADDRESS = os.environ.get("MOTO_SERVER_IP", "0.0.0.0")
 STATE_FILE = Path(os.environ.get("MOTO_RECORDER_FILEPATH"))
+
+
+def signal_handler(signal, frame):
+   """Handle SIGINT and SIGTERM signals."""
+   recorder.stop_recording()
+   exit(0)
 
 try:
     signal.signal(signal.SIGINT, signal_handler)
@@ -49,7 +55,7 @@ def compact_state():
                     file.write(f"{line}\n")
                     compacted.append(simple_request)
     except FileNotFoundError:
-        pass
+        print("No state file found. Skipping state restoration.")
 
 
 def restore_state(
@@ -61,7 +67,7 @@ def restore_state(
         print("Restoring MotoServer state...")
         recorder.replay_recording(f"{scheme}://{ip_address}:{port}")
     except FileNotFoundError:
-        pass
+        print("No state file found. Skipping state restoration.")
 
 
 def run_init_script():
@@ -74,13 +80,15 @@ if __name__ == "__main__":
     server = ThreadedMotoServer(IP_ADDRESS, PORT)
     server.start()
 
-    # Restore prior state
     compact_state()
+    # Restore prior state from state file.
     restore_state(IP_ADDRESS, PORT)
-
-    # Initialize resources
-    run_init_script()
 
     # Keep server alive and prevent script from ending!
     print("MotosServer is ready!")
+    # Start recording requests for state
+    recorder.start_recording()
+   
+    # Initialize resources
+    run_init_script()
     server._thread.join()
