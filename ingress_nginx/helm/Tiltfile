@@ -1,9 +1,21 @@
+"""Define the top-level `load_helmchart()` function."""
 load("ext://helm_resource", "helm_repo", "helm_resource")
 
 REPO_ALIAS = "ingress-nginx-repo"
 LABEL = "ingress"
 
 def load_helmchart(resource_deps = [], labels = [], chart_version = None):
+    """
+    Create a helm_resource from the ingress-nginx Helm Chart.
+
+    Args:
+        resource_deps: Specify resources that must exist before the controller
+            may start. The Helm repo resource is added automatically.
+        labels: Add the ingress controller to a group in the Tilt web UI.
+            Default is `["ingress"]`.
+        chart_version: Specify the version of the ingress-ningx Helm Chart to use.
+            Default is latest.
+    """
     helm_repo(
         REPO_ALIAS,
         url = "https://kubernetes.github.io/ingress-nginx",
