@@ -1,9 +1,8 @@
 load("helm/Tiltfile", "load_helmchart")
 load("minikube/Tiltfile", "load_minikube")
 
-
-def ingress_nginx(resource_deps = [], labels = []):
+def ingress_nginx(resource_deps = [], labels = [], helm_chart_version = None):
     if k8s_context() == "minikube":
         load_minikube(resource_deps, labels)
     else:
-        load_helmchart(resource_deps, labels)
+        load_helmchart(resource_deps, labels, chart_version = helm_chart_version)
