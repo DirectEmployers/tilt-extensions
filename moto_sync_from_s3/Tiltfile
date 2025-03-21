@@ -82,9 +82,16 @@ def _validate_dotenv(dotenv, dotenv_prefix):
         fail("Required secrets are missing from dotenv file:\n%s" % "\n".join(["    * %s" % s for s in missing]))
 
 
+def is_relative(dotenv_path):
+    """Check whether a path appears to be relative."""
+    return dotenv_path[0] in [".", "_"] or (dotenv_path[0].isalnum() and dotenv_path[1] != ":")
+
+
 def _handle_dotenv(dotenv_path, dotenv_prefix, bucket_name):
     """Parse dotenv by prefix, return list of environment variables for script."""
-    dotenv_path = os.path.join(PROJECT_ROOT, dotenv_path)
+    if is_relative(dotenv_path):
+        dotenv_path = os.path.join(PROJECT_ROOT, dotenv_path)
+
     if not os.path.exists(dotenv_path):
         fail("Could not load secrets: Dotenv file does not exist: %s" % dotenv_path)
 
