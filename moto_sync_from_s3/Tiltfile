@@ -18,18 +18,7 @@ def moto_sync_from_s3(
     dotenv_prefix = DOTENV_PREFIX,
     button_location = location.NAV,
 ):
-    """Sync s3 moto bucket from real s3 bucket.
-
-    Secrets should be prefixed with `S3SYNC_<source_bucket>__`, i.e.:
-      - S3SYNC__AWS_CLIENT_SESSION_NAME
-      - S3SYNC__AWS_ACCOUNT_ID (required)
-      - S3SYNC__AWS_S3_ROLE_NAME (required)
-      - S3SYNC__AWS_REGION
-      - S3SYNC__AWS_SSO_WEB_START_URL (required)
-      - S3SYNC__MOTO_SERVER_ENDPOINT
-      - S3SYNC__MOTO_ACCESS_KEY
-      - S3SYNC__MOTO_ACCESS_SECRET_KEY
-    """
+    """Sync data from remote S3 bucket to its local devenv counterpart."""
     if not dotenv_prefix:
         fail("The `dotenv_prefix` argument is incorrect: Please provide a non-empty value or omit to use default!")
 
