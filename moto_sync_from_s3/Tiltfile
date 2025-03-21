@@ -17,12 +17,16 @@ def moto_sync_from_s3(
     dotenv_path = ".env",
     dotenv_prefix = DOTENV_PREFIX,
     button_location = location.NAV,
+    sync_on_start = False,
 ):
     """Sync data from remote S3 bucket to its local devenv counterpart."""
     if not dotenv_prefix:
         fail("The `dotenv_prefix` argument is incorrect: Please provide a non-empty value or omit to use default!")
 
-    button_env = _handle_dotenv(dotenv_path, dotenv_prefix, bucket_name)
+    cmd = [os.path.join(EXTENSION_ROOT, "scripts/bootstrap.sh")]
+    cmd.extend([bucket_name, object_prefix])
+    env = _handle_dotenv(dotenv_path, dotenv_prefix, bucket_name)
+
     button_name = "sync_s3_%s_%s" % (
         bucket_name.replace("-", "_"),
         object_prefix.lower().strip("/").replace("/", "_"),
@@ -31,16 +35,16 @@ def moto_sync_from_s3(
     _create_button(
         button_name,
         button_text,
-        button_env,
+        cmd,
+        env,
         button_location,
-        args = [bucket_name, object_prefix],
     )
 
+    if sync_on_start:
+        local(cmd, env = env)
 
-def _create_button(name, text, env, button_location, args):
-    cmd = [os.path.join(EXTENSION_ROOT, "scripts/bootstrap.sh")]
-    cmd.extend(args)
 
+def _create_button(name, text, cmd, env, button_location):
     kwargs = {"location": location.NAV}
     if button_location not in ["nav", location.NAV]:
         kwargs.update(location=location.RESOURCE, resource=button_location)
@@ -49,7 +53,7 @@ def _create_button(name, text, env, button_location, args):
         name = name,
         text = text,
         icon_name = "forward_to_inbox",
-        env = env,
+        env = ["%s=%s" % (k, v) for k, v in env.items()],
         argv = cmd,
         **kwargs
     )
@@ -99,4 +103,9 @@ def _handle_dotenv(dotenv_path, dotenv_prefix, bucket_name):
     prefix = "%s__" % dotenv_prefix.upper().strip("_")
     _validate_dotenv(dotenv, prefix)
 
-    return [line.replace(prefix, "") for line in dotenv.splitlines() if line.startswith(prefix)]
+    secrets = {}
+    for line in dotenv.splitlines():
+        if line.startswith(prefix):
+            k, v = line.replace(prefix, "").split("=")
+            secrets[k] = v
+    return secrets

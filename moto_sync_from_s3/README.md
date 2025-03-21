@@ -56,6 +56,7 @@ using the provided secrets. If all goes well, you will be prompted to authentica
 | dotenv_path     | Path to dotenv file                                 | "path/to/.env"<br/>"/path/to/.global.env" | `<project root>/.env` |
 | dotenv_prefix   | Optional custom prefix for environment variables    | "S3SYNC_SPECIAL"                          | `S3SYNC`              |
 | button_location | Custom button placement (resource name or location) | "motoserver"<br/>"nav"<br/>`location.NAV` | `location.NAV`        |
+| sync_on_start   | Whether to sync files on `tilt up`                  | `True`                                    | `False`               |
 
 
 ### Providing Secrets
