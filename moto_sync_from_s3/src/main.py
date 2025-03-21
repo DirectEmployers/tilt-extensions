@@ -40,6 +40,7 @@ def sync(bucket: str, prefix: str) -> None:
     # Destination bucket; This connects to a fake S3 bucket.
     destination = motoserver_s3_client()
 
+    prefix = prefix.lstrip("/")
     # Get the current state of the source and destination buckets.
     source_objects = list_bucket_objects(source, bucket, prefix=prefix)
     destination_objects = list_bucket_objects(destination, bucket, prefix=prefix)
