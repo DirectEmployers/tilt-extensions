@@ -33,7 +33,7 @@ def moto_sync_from_s3(
     if not dotenv_prefix:
         fail("The `dotenv_prefix` argument is incorrect: Please provide a non-empty value or omit to use default!")
 
-    button_env = _handle_dotenv(dotenv_path, bucket_name)
+    button_env = _handle_dotenv(dotenv_path, dotenv_prefix, bucket_name)
     button_name = "sync_s3_%s_%s" % (
         bucket_name.replace("-", "_"),
         object_prefix.lower().strip("/").replace("/", "_"),
@@ -66,17 +66,17 @@ def _create_button(name, text, env, button_location, args):
     )
 
 
-def _dotenv_example(dotenv_prefix):
+def _dotenv_example(prefix):
     return """Please provide the following secrets (Required = *):
-    * {env_prefix}AWS_ACCOUNT_ID
-      {env_prefix}AWS_CLIENT_SESSION_NAME
-      {env_prefix}AWS_REGION
-    * {env_prefix}AWS_S3_ROLE_NAME
-    * {env_prefix}AWS_SSO_WEB_START_URL
-      {env_prefix}MOTO_ACCESS_KEY
-      {env_prefix}MOTO_ACCESS_SECRET_KEY
-      {env_prefix}MOTO_SERVER_ENDPOINT
-    """.format(env_prefix=dotenv_prefix)
+    * {prefix}AWS_ACCOUNT_ID
+      {prefix}AWS_CLIENT_SESSION_NAME
+      {prefix}AWS_REGION
+    * {prefix}AWS_S3_ROLE_NAME
+    * {prefix}AWS_SSO_WEB_START_URL
+      {prefix}MOTO_ACCESS_KEY
+      {prefix}MOTO_ACCESS_SECRET_KEY
+      {prefix}MOTO_SERVER_ENDPOINT
+    """.format(prefix=prefix)
 
 
 def _validate_dotenv(dotenv, dotenv_prefix):
@@ -93,20 +93,14 @@ def _validate_dotenv(dotenv, dotenv_prefix):
         fail("Required secrets are missing from dotenv file:\n%s" % "\n".join(["    * %s" % s for s in missing]))
 
 
-def _handle_dotenv(dotenv_path, bucket_name):
+def _handle_dotenv(dotenv_path, dotenv_prefix, bucket_name):
     """Parse dotenv by prefix, return list of environment variables for script."""
-    env_prefix = "S3SYNC__"
-
     dotenv_path = os.path.join(PROJECT_ROOT, dotenv_path)
     if not os.path.exists(dotenv_path):
         fail("Could not load secrets: Dotenv file does not exist: %s" % dotenv_path)
 
     dotenv = str(read_file(dotenv_path, default = ""))
-    _validate_dotenv(dotenv, env_prefix)
+    prefix = "%s__" % dotenv_prefix.upper().strip("_")
+    _validate_dotenv(dotenv, prefix)
 
-    secrets = []
-    for line in dotenv.splitlines():
-        if line.startswith(env_prefix):
-            secrets.append(line.replace(env_prefix, ""))
-
-    return secrets
+    return [line.replace(prefix, "") for line in dotenv.splitlines() if line.startswith(prefix)]
