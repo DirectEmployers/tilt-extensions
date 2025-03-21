@@ -3,7 +3,8 @@ load("ext://uibutton", "cmd_button", "location")
 EXTENSION_ROOT = os.getcwd()
 PROJECT_ROOT = config.main_dir
 
-REQUIRED_SECRETS = [
+DOTENV_PREFIX = "S3SYNC"
+DOTENV_REQUIRED = [
     "AWS_ACCOUNT_ID",
     "AWS_S3_ROLE_NAME",
     "AWS_SSO_WEB_START_URL",
@@ -13,22 +14,26 @@ REQUIRED_SECRETS = [
 def moto_sync_from_s3(
     bucket_name,
     object_prefix = "/",
-    secrets_path = ".env",
+    dotenv_path = ".env",
+    dotenv_prefix = DOTENV_PREFIX,
     button_location = location.NAV,
 ):
     """Sync s3 moto bucket from real s3 bucket.
 
     Secrets should be prefixed with `S3SYNC_<source_bucket>__`, i.e.:
-      - S3SYNC_MYBUCKETNAME__AWS_CLIENT_SESSION_NAME
-      - S3SYNC_MYBUCKETNAME__AWS_ACCOUNT_ID (required)
-      - S3SYNC_MYBUCKETNAME__AWS_S3_ROLE_NAME (required)
-      - S3SYNC_MYBUCKETNAME__AWS_REGION
-      - S3SYNC_MYBUCKETNAME__AWS_SSO_WEB_START_URL (required)
-      - S3SYNC_MYBUCKETNAME__MOTO_SERVER_ENDPOINT
-      - S3SYNC_MYBUCKETNAME__MOTO_ACCESS_KEY
-      - S3SYNC_MYBUCKETNAME__MOTO_ACCESS_SECRET_KEY
+      - S3SYNC__AWS_CLIENT_SESSION_NAME
+      - S3SYNC__AWS_ACCOUNT_ID (required)
+      - S3SYNC__AWS_S3_ROLE_NAME (required)
+      - S3SYNC__AWS_REGION
+      - S3SYNC__AWS_SSO_WEB_START_URL (required)
+      - S3SYNC__MOTO_SERVER_ENDPOINT
+      - S3SYNC__MOTO_ACCESS_KEY
+      - S3SYNC__MOTO_ACCESS_SECRET_KEY
     """
-    button_env = _handle_secrets(secrets_path, bucket_name)
+    if not dotenv_prefix:
+        fail("The `dotenv_prefix` argument is incorrect: Please provide a non-empty value or omit to use default!")
+
+    button_env = _handle_dotenv(dotenv_path, bucket_name)
     button_name = "sync_s3_%s_%s" % (
         bucket_name.replace("-", "_"),
         object_prefix.lower().strip("/").replace("/", "_"),
@@ -61,7 +66,7 @@ def _create_button(name, text, env, button_location, args):
     )
 
 
-def _secrets_example(env_prefix):
+def _dotenv_example(dotenv_prefix):
     return """Please provide the following secrets (Required = *):
     * {env_prefix}AWS_ACCOUNT_ID
       {env_prefix}AWS_CLIENT_SESSION_NAME
@@ -71,36 +76,36 @@ def _secrets_example(env_prefix):
       {env_prefix}MOTO_ACCESS_KEY
       {env_prefix}MOTO_ACCESS_SECRET_KEY
       {env_prefix}MOTO_SERVER_ENDPOINT
-    """.format(env_prefix=env_prefix)
+    """.format(env_prefix=dotenv_prefix)
 
 
-def _validate_secrets(secrets, env_prefix):
-    if not secrets:
-        fail("Secrets file is empty: %s" % _secrets_example(env_prefix))
+def _validate_dotenv(dotenv, dotenv_prefix):
+    if not dotenv:
+        fail("Dotenv file is empty: %s" % _dotenv_example(dotenv_prefix))
 
     missing = []
-    for required in REQUIRED_SECRETS:
-        secret = env_prefix + required
-        if secret not in secrets:
+    for required in DOTENV_REQUIRED:
+        secret = dotenv_prefix + required
+        if secret not in dotenv:
             missing.append(secret)
 
     if missing:
-        fail("Required secrets are missing:\n%s" % "\n".join(["    * %s" % s for s in missing]))
+        fail("Required secrets are missing from dotenv file:\n%s" % "\n".join(["    * %s" % s for s in missing]))
 
 
-def _handle_secrets(secrets_path, bucket_name):
-    """Parse secrets by prefix, return list of environment variables for script."""
-    env_prefix = "S3SYNC_%s__" % bucket_name.upper()
+def _handle_dotenv(dotenv_path, bucket_name):
+    """Parse dotenv by prefix, return list of environment variables for script."""
+    env_prefix = "S3SYNC__"
 
-    secrets_path = os.path.join(PROJECT_ROOT, secrets_path)
-    if not os.path.exists(secrets_path):
-        fail("Could not load secrets: File does not exist: %s" % secrets_path)
+    dotenv_path = os.path.join(PROJECT_ROOT, dotenv_path)
+    if not os.path.exists(dotenv_path):
+        fail("Could not load secrets: Dotenv file does not exist: %s" % dotenv_path)
 
-    text_secrets = str(read_file(secrets_path, default = ""))
-    _validate_secrets(text_secrets, env_prefix)
+    dotenv = str(read_file(dotenv_path, default = ""))
+    _validate_dotenv(dotenv, env_prefix)
 
     secrets = []
-    for line in text_secrets.splitlines():
+    for line in dotenv.splitlines():
         if line.startswith(env_prefix):
             secrets.append(line.replace(env_prefix, ""))
 

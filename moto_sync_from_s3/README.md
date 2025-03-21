@@ -38,7 +38,7 @@ load("ext://moto_sync_from_s3", "moto_sync_from_s3")
 moto_sync_from_s3(
     bucket_name = "my_bucket",
     object_prefix = "path/to/sync/",
-    secrets_path = "src/.env",
+    dotenv_path = "src/.env",
 )
 ```
 
@@ -49,25 +49,27 @@ using the provided secrets. If all goes well, you will be prompted to authentica
 
 ### Options
 
-| Argument        | Type                                     | Examples                                  | Default               |
-|-----------------|------------------------------------------|-------------------------------------------|-----------------------|
-| bucket_name     | string                                   | "mybucket"                                | Required              |
-| object_prefix   | string                                   | "path/to/sync/"                           | `/`                   |
-| secrets_path    | string                                   | "path/to/.env"                            | `<project root>/.env` |
-| button_location | string<br/>(resource or button location) | "motoserver"<br/>"nav"<br/>`location.NAV` | `location.NAV`        |
+| Argument        | Description                                         | Examples                                  | Default               |
+|-----------------|-----------------------------------------------------|-------------------------------------------|-----------------------|
+| bucket_name     | Name of bucket to sync                              | "mybucket"                                | Required              |
+| object_prefix   | Optional object prefix/path to select for sync      | "path/to/sync/"                           | `/`                   |
+| dotenv_path     | Path to dotenv file                                 | "path/to/.env"<br/>"/path/to/.global.env" | `<project root>/.env` |
+| dotenv_prefix   | Optional custom prefix for environment variables    | "S3SYNC_SPECIAL"                          | `S3SYNC`              |
+| button_location | Custom button placement (resource name or location) | "motoserver"<br/>"nav"<br/>`location.NAV` | `location.NAV`        |
 
 
 ### Providing Secrets
 Secrets should be provided in the form of a `.env` file. Below are the available options:
 
 ```dotenv
-S3SYNC_<BUCKET_NAME>__AWS_ACCOUNT_ID=<required>
-S3SYNC_<BUCKET_NAME>__AWS_S3_ROLE_NAME=<required>
-S3SYNC_<BUCKET_NAME>__AWS_REGION=us-east-1
-S3SYNC_<BUCKET_NAME>__AWS_SSO_WEB_START_URL=<required>
-S3SYNC_<BUCKET_NAME>__MOTO_SERVER_ENDPOINT=http://motoserver:3000
-S3SYNC_<BUCKET_NAME>__MOTO_ACCESS_KEY=A
-S3SYNC_<BUCKET_NAME>__MOTO_ACCESS_SECRET_KEY=B
+S3SYNC__AWS_ACCOUNT_ID=<required>
+S3SYNC__AWS_S3_ROLE_NAME=<required>
+S3SYNC__AWS_REGION=us-east-1
+S3SYNC__AWS_SSO_WEB_START_URL=<required>
+S3SYNC__MOTO_SERVER_ENDPOINT=http://motoserver:3000
+S3SYNC__MOTO_ACCESS_KEY=A
+S3SYNC__MOTO_ACCESS_SECRET_KEY=B
 ```
 > **Note:** If you are using motoserver defaults, then it is likely that only the ones marked `<required>` will be 
-> needed. Don't forget to replace `<BUCKET_NAME>` with your capitalized bucket name.
+> needed. If you need to connect to buckets using different credentials, you can override the default prefix (`S3SYNC`)
+> with a value of your own for each special case.
