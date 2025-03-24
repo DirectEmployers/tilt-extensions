@@ -25,6 +25,7 @@ def load_helmchart(resource_deps = [], labels = [], chart_version = None):
     helm_flags = [
         "--create-namespace",
         "--set=controller.allowSnippetAnnotations=true",
+        "--set=controller.config.annotations-risk-level=Critical",
         "--set=controller.ingressClassResource.default=true",
     ]
     if chart_version:
