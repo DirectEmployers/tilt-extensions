@@ -61,15 +61,19 @@ def _create_button(name, text, cmd, env, button_location):
 
 def _dotenv_example(prefix):
     return """Please provide the following secrets (Required = *):
-    * {prefix}AWS_ACCOUNT_ID
-      {prefix}AWS_CLIENT_SESSION_NAME
-      {prefix}AWS_REGION
-    * {prefix}AWS_S3_ROLE_NAME
-    * {prefix}AWS_SSO_WEB_START_URL
-      {prefix}MOTO_ACCESS_KEY
-      {prefix}MOTO_ACCESS_SECRET_KEY
-      {prefix}MOTO_SERVER_ENDPOINT
+    * {prefix}_AWS_ACCOUNT_ID
+      {prefix}_AWS_CLIENT_SESSION_NAME
+      {prefix}_AWS_REGION
+    * {prefix}_AWS_S3_ROLE_NAME
+    * {prefix}_AWS_SSO_WEB_START_URL
+      {prefix}_MOTO_ACCESS_KEY
+      {prefix}_MOTO_ACCESS_SECRET_KEY
+      {prefix}_MOTO_SERVER_ENDPOINT
     """.format(prefix=prefix)
+
+
+def _parse_env_prefixed(line, prefix):
+    return line.replace(prefix, "").lstrip("_").split("=")
 
 
 def _validate_dotenv(dotenv, dotenv_prefix):
@@ -78,9 +82,16 @@ def _validate_dotenv(dotenv, dotenv_prefix):
 
     missing = []
     for required in DOTENV_REQUIRED:
-        secret = dotenv_prefix + required
-        if secret not in dotenv:
-            missing.append(secret)
+        found = False
+        for line in dotenv.splitlines():
+            expected = required
+            if (
+                line.startswith(dotenv_prefix)
+                and _parse_env_prefixed(line, dotenv_prefix)[0] == required
+            ):
+                found = True
+        if not found:
+            missing.append("%s_%s" % (dotenv_prefix, required))
 
     if missing:
         fail("Required secrets are missing from dotenv file:\n%s" % "\n".join(["    * %s" % s for s in missing]))
@@ -100,12 +111,13 @@ def _handle_dotenv(dotenv_path, dotenv_prefix, bucket_name):
         fail("Could not load secrets: Dotenv file does not exist: %s" % dotenv_path)
 
     dotenv = str(read_file(dotenv_path, default = ""))
-    prefix = "%s__" % dotenv_prefix.upper().strip("_")
+    prefix = dotenv_prefix.upper().strip("_")
     _validate_dotenv(dotenv, prefix)
 
     secrets = {}
     for line in dotenv.splitlines():
         if line.startswith(prefix):
-            k, v = line.replace(prefix, "").split("=")
-            secrets[k] = v
+            # Remove prefix and clean extra underscores, split into key and value.
+            key, value = _parse_env_prefixed(line, prefix)
+            secrets[key] = value
     return secrets

@@ -63,13 +63,13 @@ using the provided secrets. If all goes well, you will be prompted to authentica
 Secrets should be provided in the form of a `.env` file. Below are the available options:
 
 ```dotenv
-S3SYNC__AWS_ACCOUNT_ID=<required>
-S3SYNC__AWS_S3_ROLE_NAME=<required>
-S3SYNC__AWS_REGION=us-east-1
-S3SYNC__AWS_SSO_WEB_START_URL=<required>
-S3SYNC__MOTO_SERVER_ENDPOINT=http://motoserver:3000
-S3SYNC__MOTO_ACCESS_KEY=A
-S3SYNC__MOTO_ACCESS_SECRET_KEY=B
+S3SYNC_AWS_ACCOUNT_ID=<required>
+S3SYNC_AWS_S3_ROLE_NAME=<required>
+S3SYNC_AWS_REGION=us-east-1
+S3SYNC_AWS_SSO_WEB_START_URL=<required>
+S3SYNC_MOTO_SERVER_ENDPOINT=http://motoserver:3000
+S3SYNC_MOTO_ACCESS_KEY=A
+S3SYNC_MOTO_ACCESS_SECRET_KEY=B
 ```
 > **Note:** If you are using motoserver defaults, then it is likely that only the ones marked `<required>` will be 
 > needed. If you need to connect to buckets using different credentials, you can override the default prefix (`S3SYNC`)
