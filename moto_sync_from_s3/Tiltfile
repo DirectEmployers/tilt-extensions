@@ -1,0 +1,131 @@
+load("ext://uibutton", "cmd_button", "location")
+
+EXTENSION_ROOT = os.getcwd()
+PROJECT_ROOT = config.main_dir
+
+DOTENV_PREFIX = "S3SYNC"
+DOTENV_REQUIRED = [
+    "AWS_ACCOUNT_ID",
+    "AWS_S3_ROLE_NAME",
+    "AWS_SSO_WEB_START_URL",
+]
+
+
+def moto_sync_from_s3(
+    bucket_name,
+    object_prefix = "/",
+    dotenv_path = ".env",
+    dotenv_prefix = DOTENV_PREFIX,
+    button_location = location.NAV,
+    sync_on_start = False,
+    resource_deps = ["motoserver"],
+    labels = ["motoserver"],
+):
+    """Sync data from remote S3 bucket to its local devenv counterpart."""
+    if not dotenv_prefix:
+        fail("The `dotenv_prefix` argument is incorrect: Please provide a non-empty value or omit to use default!")
+
+    cmd = [os.path.join(EXTENSION_ROOT, "scripts/bootstrap.sh")]
+    cmd.extend([bucket_name, object_prefix])
+    env = _handle_dotenv(dotenv_path, dotenv_prefix, bucket_name)
+
+    resource_name = "sync_s3_%s_%s" % (
+        bucket_name.replace("-", "_"),
+        object_prefix.lower().strip("/").replace("/", "_"),
+    )
+    button_text = "Sync s3://%s" % bucket_name
+    _create_button(
+        resource_name,
+        button_text,
+        cmd,
+        env,
+        button_location,
+    )
+
+    if sync_on_start:
+        local_resource(
+            resource_name,
+            cmd,
+            env = env,
+            resource_deps = resource_deps,
+            labels = labels,
+        )
+
+
+def _create_button(name, text, cmd, env, button_location):
+    kwargs = {"location": location.NAV}
+    if button_location not in ["nav", location.NAV]:
+        kwargs.update(location=location.RESOURCE, resource=button_location)
+
+    cmd_button(
+        name = name,
+        text = text,
+        icon_name = "forward_to_inbox",
+        env = ["%s=%s" % (k, v) for k, v in env.items()],
+        argv = cmd,
+        **kwargs
+    )
+
+
+def _dotenv_example(prefix):
+    return """Please provide the following secrets (Required = *):
+    * {prefix}_AWS_ACCOUNT_ID
+      {prefix}_AWS_CLIENT_SESSION_NAME
+      {prefix}_AWS_REGION
+    * {prefix}_AWS_S3_ROLE_NAME
+    * {prefix}_AWS_SSO_WEB_START_URL
+      {prefix}_MOTO_ACCESS_KEY
+      {prefix}_MOTO_ACCESS_SECRET_KEY
+      {prefix}_MOTO_SERVER_ENDPOINT
+    """.format(prefix=prefix)
+
+
+def _parse_env_prefixed(line, prefix):
+    return line.replace(prefix, "").lstrip("_").split("=")
+
+
+def _validate_dotenv(dotenv, dotenv_prefix):
+    if not dotenv:
+        fail("Dotenv file is empty: %s" % _dotenv_example(dotenv_prefix))
+
+    missing = []
+    for required in DOTENV_REQUIRED:
+        found = False
+        for line in dotenv.splitlines():
+            expected = required
+            if (
+                line.startswith(dotenv_prefix)
+                and _parse_env_prefixed(line, dotenv_prefix)[0] == required
+            ):
+                found = True
+        if not found:
+            missing.append("%s_%s" % (dotenv_prefix, required))
+
+    if missing:
+        fail("Required secrets are missing from dotenv file:\n%s" % "\n".join(["    * %s" % s for s in missing]))
+
+
+def is_relative(dotenv_path):
+    """Check whether a path appears to be relative."""
+    return dotenv_path[0] in [".", "_"] or (dotenv_path[0].isalnum() and dotenv_path[1] != ":")
+
+
+def _handle_dotenv(dotenv_path, dotenv_prefix, bucket_name):
+    """Parse dotenv by prefix, return list of environment variables for script."""
+    if is_relative(dotenv_path):
+        dotenv_path = os.path.join(PROJECT_ROOT, dotenv_path)
+
+    if not os.path.exists(dotenv_path):
+        fail("Could not load secrets: Dotenv file does not exist: %s" % dotenv_path)
+
+    dotenv = str(read_file(dotenv_path, default = ""))
+    prefix = dotenv_prefix.upper().strip("_")
+    _validate_dotenv(dotenv, prefix)
+
+    secrets = {}
+    for line in dotenv.splitlines():
+        if line.startswith(prefix):
+            # Remove prefix and clean extra underscores, split into key and value.
+            key, value = _parse_env_prefixed(line, prefix)
+            secrets[key] = value
+    return secrets
