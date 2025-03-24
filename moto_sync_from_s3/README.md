@@ -57,6 +57,8 @@ using the provided secrets. If all goes well, you will be prompted to authentica
 | dotenv_prefix   | Optional custom prefix for environment variables    | "S3SYNC_SPECIAL"                          | `S3SYNC`              |
 | button_location | Custom button placement (resource name or location) | "motoserver"<br/>"nav"<br/>`location.NAV` | `location.NAV`        |
 | sync_on_start   | Whether to sync files on `tilt up`                  | `True`                                    | `False`               |
+| resource_deps   | Ignored when `sync_on_start` is `False`.            | `["motoserver", "database"]`              | `["motoserver"]`      |
+| labels          | Ignored when `sync_on_start` is `False`.            | `["motoserver"]`                          | `["motoserver"]`      |
 
 
 ### Providing Secrets

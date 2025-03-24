@@ -18,6 +18,8 @@ def moto_sync_from_s3(
     dotenv_prefix = DOTENV_PREFIX,
     button_location = location.NAV,
     sync_on_start = False,
+    resource_deps = ["motoserver"],
+    labels = ["motoserver"],
 ):
     """Sync data from remote S3 bucket to its local devenv counterpart."""
     if not dotenv_prefix:
@@ -27,13 +29,13 @@ def moto_sync_from_s3(
     cmd.extend([bucket_name, object_prefix])
     env = _handle_dotenv(dotenv_path, dotenv_prefix, bucket_name)
 
-    button_name = "sync_s3_%s_%s" % (
+    resource_name = "sync_s3_%s_%s" % (
         bucket_name.replace("-", "_"),
         object_prefix.lower().strip("/").replace("/", "_"),
     )
     button_text = "Sync s3://%s" % bucket_name
     _create_button(
-        button_name,
+        resource_name,
         button_text,
         cmd,
         env,
@@ -41,7 +43,13 @@ def moto_sync_from_s3(
     )
 
     if sync_on_start:
-        local(cmd, env = env)
+        local_resource(
+            resource_name,
+            cmd,
+            env = env,
+            resource_deps = resource_deps,
+            labels = labels,
+        )
 
 
 def _create_button(name, text, cmd, env, button_location):
