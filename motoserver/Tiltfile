@@ -13,11 +13,13 @@ def motoserver_up(init_script = "", **k8s_kwargs):
         dockerfile = os.path.join(extension_root, "Dockerfile"),
     )
 
-    if not init_script:
-         init_script = read_file(os.path.join(extension_root, "scripts/init.sh"))
+    if init_script:
+        # If `init_script` contains a newline, it's not a path
+        not_path = "\n" in init_script
+        # Treat `init_script` as a script if it isn't a path
+        init_script = init_script if not_path else read_file(init_script, default=init_script)
     else:
-        # If `init_script` is a file path, return its contents. Otherwise, treat it as a string.
-        init_script = read_file(init_script, init_script)
+        init_script = read_file(os.path.join(extension_root, "scripts/init.sh"))
 
     k8s_yaml([
         os.path.join(extension_root, "k8s/moto-statefulset.yaml"),
