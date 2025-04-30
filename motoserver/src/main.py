@@ -81,13 +81,14 @@ if __name__ == "__main__":
     server.start()
 
     compact_state()
-    # Restore prior state from state file.
-    restore_state(IP_ADDRESS, PORT)
-
+    # Restore prior state from state file if state and recording is not disabled..
+    if os.environ.get("MOTO_ENABLE_RECORDING") != "false":
+        restore_state(IP_ADDRESS, PORT)
     # Keep server alive and prevent script from ending!
     print("MotosServer is ready!")
     # Start recording requests for state
-    recorder.start_recording()
+    if os.environ.get("MOTO_ENABLE_RECORDING") != "false":
+        recorder.start_recording()
    
     # Initialize resources
     run_init_script()
