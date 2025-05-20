@@ -1,10 +1,15 @@
 """Define the top-level `load_helmchart()` function."""
+
 load("ext://helm_resource", "helm_repo", "helm_resource")
 
 REPO_ALIAS = "ingress-nginx-repo"
 LABEL = "ingress"
 
-def load_helmchart(resource_deps = [], labels = [], chart_version = None):
+def load_helmchart(
+        resource_deps = [],
+        labels = [],
+        chart_version = None,
+        helm_flags = []):
     """
     Create a helm_resource from the ingress-nginx Helm Chart.
 
@@ -15,6 +20,7 @@ def load_helmchart(resource_deps = [], labels = [], chart_version = None):
             Default is `["ingress"]`.
         chart_version: Specify the version of the ingress-ningx Helm Chart to use.
             Default is latest.
+        helm_flags: List of strings. Custom flags passed to `helm_resource()`.
     """
     helm_repo(
         REPO_ALIAS,
@@ -22,20 +28,21 @@ def load_helmchart(resource_deps = [], labels = [], chart_version = None):
         labels = labels or [LABEL],
     )
 
-    helm_flags = [
+    default_helm_flags = [
         "--create-namespace",
         "--set=controller.allowSnippetAnnotations=true",
         "--set=controller.config.annotations-risk-level=Critical",
         "--set=controller.ingressClassResource.default=true",
     ]
+    merged_helm_flags = default_helm_flags + helm_flags
     if chart_version:
-        helm_flags.append("--version=%s" % chart_version)
+        merged_helm_flags.append("--version=%s" % chart_version)
 
     helm_resource(
         "ingress-nginx",
         chart = "%s/ingress-nginx" % REPO_ALIAS,
         namespace = "ingress-nginx",
-        flags = helm_flags,
+        flags = merged_helm_flags,
         resource_deps = [REPO_ALIAS] + resource_deps,
         labels = labels or [LABEL],
     )

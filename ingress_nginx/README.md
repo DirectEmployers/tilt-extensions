@@ -18,6 +18,17 @@ All arguments for `ingress_nginx()` are optional:
 
     Specify the version of the [ingress-ningx Helm Chart](https://github.com/kubernetes/ingress-nginx/releases?q=helm-chart&expanded=true) to use. Defaults to the latest version. Doesn't do anything when using Minikube.
 
+- `helm_flags: list[str] = []`
+
+    Pass custom flags to the `flags` argument of [`helm_resource`](https://github.com/tilt-dev/tilt-extensions/tree/master/helm_resource#helm_resource), <i>e.g.</i> `['--set=key=value']`.
+
+    Flags that are always passed:
+
+    - `--create-namespace`
+    - `--set=controller.allowSnippetAnnotations=true`
+    - `--set=controller.config.annotations-risk-level=Critical`
+    - `--set=controller.ingressClassResource.default=true`
+
 ## Usage
 
 After registering the repo and extension (see [main README](../README.md)), you can invoke the extension using
