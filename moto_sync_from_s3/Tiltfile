@@ -20,7 +20,7 @@ def moto_sync_from_s3(
     sync_on_start = False,
     resource_deps = ["motoserver"],
     labels = ["motoserver"],
-    resource_name = None
+    resource_name = "",
 ):
     """Sync data from remote S3 bucket to its local devenv counterpart."""
     if not dotenv_prefix:
