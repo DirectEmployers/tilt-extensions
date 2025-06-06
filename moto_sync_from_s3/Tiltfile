@@ -29,11 +29,12 @@ def moto_sync_from_s3(
     cmd = [os.path.join(EXTENSION_ROOT, "scripts/bootstrap.sh")]
     cmd.extend([bucket_name, object_prefix])
     env = _handle_dotenv(dotenv_path, dotenv_prefix, bucket_name)
-
-    resource_name = "sync_s3_%s_%s" % (
-        bucket_name.replace("-", "_"),
-        object_prefix.lower().strip("/").replace("/", "_"),
-    ) if not resource_name else resource_name
+    
+    if not resource_name:
+        resource_name = "sync_s3_%s_%s" % (
+            bucket_name.replace("-", "_"),
+            object_prefix.lower().strip("/").replace("/", "_"),
+        ) 
 
     button_text = "Sync s3://%s" % bucket_name
     _create_button(
