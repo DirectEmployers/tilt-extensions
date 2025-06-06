@@ -36,6 +36,14 @@ spec:
           mountPath: /usr/share/motoserver/
         - name: init-script
           mountPath: /motoserver/
+        readinessProbe:
+          exec:
+            command:
+            - test
+            - -f
+            - ~/is_ready
+          initialDelaySeconds: 5
+          periodSeconds: 5
       volumes:
       - name: init-script
         configMap:
