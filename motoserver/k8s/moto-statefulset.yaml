@@ -39,11 +39,11 @@ spec:
         readinessProbe:
           exec:
             command:
-            - test
-            - -f
-            - ~/is_ready
-          initialDelaySeconds: 5
-          periodSeconds: 5
+              - sh
+              - -c
+              - test -f ~/is_ready
+          initialDelaySeconds: 30
+          periodSeconds: 30
       volumes:
       - name: init-script
         configMap:
