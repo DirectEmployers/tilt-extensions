@@ -92,4 +92,5 @@ if __name__ == "__main__":
    
     # Initialize resources
     run_init_script()
+    (Path.home() / "is_ready").touch()
     server._thread.join()
