@@ -4,7 +4,7 @@ load("../devcore/Tiltfile", "tilt_port")
 extension_root = os.getcwd()
 
 
-def motoserver_up(init_script = "", **k8s_kwargs):
+def motoserver_up(init_script = "", keep_state = True, **k8s_kwargs):
     """Deploy MotoServer using Docker and Kubernetes."""
 
     docker_build(
@@ -21,10 +21,16 @@ def motoserver_up(init_script = "", **k8s_kwargs):
     else:
         init_script = read_file(os.path.join(extension_root, "scripts/init.sh"))
 
-    k8s_yaml([
-        os.path.join(extension_root, "k8s/moto-statefulset.yaml"),
-        os.path.join(extension_root, "k8s/moto-service.yaml"),
-    ])
+    statefulset = read_yaml(os.path.join(extension_root, "k8s/moto-statefulset.yaml"))
+    if not keep_state:
+        statefulset_env = statefulset["spec"]["template"]["spec"]["containers"][0]["env"]
+        for env_var in statefulset_env:
+            if env_var["name"] == "MOTO_ENABLE_RECORDING":
+                env_var["value"] = "False"
+        statefulset["spec"]["template"]["spec"]["containers"][0]["env"] = statefulset_env
+    k8s_yaml(encode_yaml(statefulset))
+    k8s_yaml(os.path.join(extension_root, "k8s/moto-service.yaml"))
+
     k8s_yaml(init_script_configmap_yaml("motoserver-init-script", init_script))
 
     k8s_resource(

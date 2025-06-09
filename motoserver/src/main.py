@@ -7,16 +7,16 @@ from subprocess import run
 from moto.moto_api import recorder
 from moto.server import ThreadedMotoServer
 
-
 PORT = os.environ.get("MOTO_PORT", "5000")
 IP_ADDRESS = os.environ.get("MOTO_SERVER_IP", "0.0.0.0")
 STATE_FILE = Path(os.environ.get("MOTO_RECORDER_FILEPATH"))
 
 
 def signal_handler(signal, frame):
-   """Handle SIGINT and SIGTERM signals."""
-   recorder.stop_recording()
-   exit(0)
+    """Handle SIGINT and SIGTERM signals."""
+    recorder.stop_recording()
+    exit(0)
+
 
 try:
     signal.signal(signal.SIGINT, signal_handler)
@@ -79,17 +79,18 @@ if __name__ == "__main__":
     # Start server
     server = ThreadedMotoServer(IP_ADDRESS, PORT)
     server.start()
+    recorder_enabled = os.environ.get("MOTO_ENABLE_RECORDING", "true").lower() == "true"
 
-    compact_state()
     # Restore prior state from state file if state and recording is not disabled..
-    if os.environ.get("MOTO_ENABLE_RECORDING") != "false":
+    if recorder_enabled:
+        compact_state()
         restore_state(IP_ADDRESS, PORT)
     # Keep server alive and prevent script from ending!
     print("MotosServer is ready!")
     # Start recording requests for state
-    if os.environ.get("MOTO_ENABLE_RECORDING") != "false":
+    if recorder_enabled:
         recorder.start_recording()
-   
+
     # Initialize resources
     run_init_script()
     (Path.home() / "is_ready").touch()
