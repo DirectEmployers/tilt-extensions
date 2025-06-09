@@ -82,7 +82,7 @@ if __name__ == "__main__":
     recorder_enabled = os.environ.get("MOTO_ENABLE_RECORDING", "true").lower() == "true"
 
     # Restore prior state from state file if state and recording is not disabled..
-    if recorder_enabled != "false":
+    if recorder_enabled:
         compact_state()
         restore_state(IP_ADDRESS, PORT)
     # Keep server alive and prevent script from ending!
