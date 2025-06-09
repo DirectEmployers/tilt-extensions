@@ -88,7 +88,7 @@ if __name__ == "__main__":
     # Keep server alive and prevent script from ending!
     print("MotosServer is ready!")
     # Start recording requests for state
-    if recorder_enabled != "false":
+    if recorder_enabled:
         recorder.start_recording()
 
     # Initialize resources
