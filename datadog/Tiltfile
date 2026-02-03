@@ -14,7 +14,6 @@ DD_KEY_FILE = os.path.join(DD_USER_CONFIG_PATH, ".keys.env")
 WORKLOAD_NAME = "datadog-agent"
 BUTTON_NAME = "de-remote:toggle-datadog-agent"
 
-DEFAULT_AGENT_TAG = "latest"
 MINIMUM_AGENT_VERSION = 7
 
 
@@ -22,14 +21,14 @@ MINIMUM_AGENT_VERSION = 7
 watch_settings(DD_USER_CONFIG_PATH)
 
 
-def datadog_up(agent_version = DEFAULT_AGENT_TAG):
+def datadog_up(agent_version = None):
     """Main function for this Tilt extension.
 
     Creates necessary resources for the Datadog Agent to run and be shared across
     multiple Tilt sessions.
 
     Args:
-      agent_version: Set a specific version tag for Datadog Agent images.
+      agent_version (`str | None`): Set a specific version tag for Datadog Agent images.
     """
     port = current_port()
     operator_port = which_sessions("uiresource", "datadog-operator")
@@ -139,9 +138,6 @@ def _datadog_keys_secret():
 
 def _validate_agent_version(agent_version):
     """Fail with errors if provided agent version tag is incompatible with extension."""
-    if agent_version == "latest":
-        return
-
     errors = []
     semverish = agent_version.split(".")
     if int(semverish[0]) < MINIMUM_AGENT_VERSION:
@@ -160,11 +156,11 @@ def _validate_agent_version(agent_version):
     all([int(i) for i in semverish])
 
 
-def _helm_resources(agent_version = DEFAULT_AGENT_TAG):
+def _helm_resources(agent_version = None):
     """Create Tilt resources required to install Datadog Agent from Helm charts.
 
     Args:
-      agent_version: Sets a specific image tag version for the Datadog Agent.
+      agent_version (`str | None`): Sets a specific image tag version for the Datadog Agent.
     """
     release_name = "datadog-agent"
     helm_repo(
@@ -175,11 +171,11 @@ def _helm_resources(agent_version = DEFAULT_AGENT_TAG):
 
     chart_values = os.path.join(EXTENSION_PATH, "values.yaml")
     flags = ["--values", chart_values]
-
-    _validate_agent_version(agent_version)
-    flags.extend(["--set", "agents.image.tag=%s" % agent_version])
-    flags.extend(["--set", "clusterAgent.image.tag=%s" % agent_version])
-    flags.extend(["--set", "clusterChecksRunner.image.tag=%s" % agent_version])
+    if agent_version != None:
+        _validate_agent_version(agent_version)
+        flags.extend(["--set", "agents.image.tag=%s" % agent_version])
+        flags.extend(["--set", "clusterAgent.image.tag=%s" % agent_version])
+        flags.extend(["--set", "clusterChecksRunner.image.tag=%s" % agent_version])
 
     helm_resource(
         WORKLOAD_NAME,
