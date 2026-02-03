@@ -14,9 +14,6 @@ DD_KEY_FILE = os.path.join(DD_USER_CONFIG_PATH, ".keys.env")
 WORKLOAD_NAME = "datadog-agent"
 BUTTON_NAME = "de-remote:toggle-datadog-agent"
 
-MINIMUM_AGENT_VERSION = 7
-
-
 # Tell Tilt not to watch/reload when configuration files update.
 watch_settings(DD_USER_CONFIG_PATH)
 
@@ -136,26 +133,6 @@ def _datadog_keys_secret():
     )
 
 
-def _validate_agent_version(agent_version):
-    """Fail with errors if provided agent version tag is incompatible with extension."""
-    errors = []
-    semverish = agent_version.split(".")
-    if int(semverish[0]) < MINIMUM_AGENT_VERSION:
-        errors.append("Datadog Extension: Agent version must be ≥ %d." % MINIMUM_AGENT_VERSION)
-
-    if len(semverish) > 3 or any(["-" in i for i in semverish]):
-        errors.append("Datadog Extension: Agent version must be in semver notation.")
-
-    for e in errors:
-        warn(e)
-
-    if errors:
-        fail("Datadog Extension: Invalid version tag '%s'; see warnings above." % agent_version)
-
-    # Last ditch effort to ensure this is a usable version number.
-    all([int(i) for i in semverish])
-
-
 def _helm_resources(agent_version = None):
     """Create Tilt resources required to install Datadog Agent from Helm charts.
 
@@ -172,7 +149,6 @@ def _helm_resources(agent_version = None):
     chart_values = os.path.join(EXTENSION_PATH, "values.yaml")
     flags = ["--values", chart_values]
     if agent_version != None:
-        _validate_agent_version(agent_version)
         flags.extend(["--set", "agents.image.tag=%s" % agent_version])
         flags.extend(["--set", "clusterAgent.image.tag=%s" % agent_version])
         flags.extend(["--set", "clusterChecksRunner.image.tag=%s" % agent_version])
