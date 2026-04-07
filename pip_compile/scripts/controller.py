@@ -125,7 +125,9 @@ def tilt_resource_template(kind: str) -> dict:
 
 
 def generate_tilt_json(
-    resource: str, context: str, arguments: list[str]
+    resource: str,
+    context: str,
+    arguments: list[str],
 ) -> tuple[str, str]:
     """Generate two JSON documents: One for the UIButton, and one for the Cmd.
 
@@ -135,31 +137,31 @@ def generate_tilt_json(
     :return:
     """
     btn_name = f"{resource}:btn:pip-compile"
-    log_span_id = f"{resource}:pip-compile"
-
-    uibutton = tilt_resource_template("UIButton")
-    uibutton["metadata"]["name"] = btn_name
-    uibutton["spec"] = {
-        "location": {
-            "componentType": "Resource",
-            "componentID": resource,
-        },
-        "iconName": "build_circle",
-        "text": "pip-compile",
-    }
-
-    cmd = tilt_resource_template("Cmd")
-    cmd["metadata"] = {
-        "name": f"{resource}:pip-compile",
-        "annotations": {
-            "tilt.dev/resource": resource,
-            "tilt.dev/log-span-id": log_span_id,
+    uibutton = tilt_resource_template("UIButton") | {
+        "metadata": {"name": btn_name},
+        "spec": {
+            "location": {
+                "componentType": "Resource",
+                "componentID": resource,
+            },
+            "iconName": "build_circle",
+            "text": "pip-compile",
         },
     }
-    cmd["spec"] = {
-        "args": arguments,
-        "dir": context,
-        "startOn": {"uiButtons": [btn_name]},
+
+    cmd = tilt_resource_template("Cmd") | {
+        "metadata": {
+            "name": f"{resource}:pip-compile",
+            "annotations": {
+                "tilt.dev/resource": resource,
+                "tilt.dev/log-span-id": f"{resource}:pip-compile",
+            },
+        },
+        "spec": {
+            "args": arguments,
+            "dir": context,
+            "startOn": {"uiButtons": [btn_name]},
+        },
     }
 
     return json.dumps(uibutton), json.dumps(cmd)
