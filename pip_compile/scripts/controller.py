@@ -16,7 +16,8 @@ def get_enabled_tilt_resources() -> list[str]:
     )
     resources = json.loads(resources_json.stdout).get("items", [])
     return [
-        r["metadata"]["name"] for r in resources
+        r["metadata"]["name"]
+        for r in resources
         if r["status"]["disableStatus"]["state"] == "Enabled"
     ]
 
@@ -106,10 +107,7 @@ def tilt_apply(json_config: str) -> subprocess.CompletedProcess:
     :return:
     """
     return subprocess.run(
-        ["tilt", "apply", "-f", "-"],
-        input=json_config,
-        text=True,
-        check=True
+        ["tilt", "apply", "-f", "-"], input=json_config, text=True, check=True
     )
 
 
