@@ -58,16 +58,15 @@ def update_image_resources(
         if image_ref == image and resource in enabled_resources:
             spec = dockerimage["spec"]
             cmd_args = get_cmd_args(image, resource, target, reqs_path, compile_args)
-            json_config = generate_tilt_json(resource, spec["context"], cmd_args)
-
-            try:
-                tilt_apply(json_config)
-            except subprocess.CalledProcessError:
-                print(
-                    f"❌ {resource}… error!",
-                    f"Failed to apply: {json_config}",
-                    sep="\n",
-                )
+            for config in generate_tilt_json(resource, spec["context"], cmd_args):
+                try:
+                    tilt_apply(config)
+                except subprocess.CalledProcessError:
+                    print(
+                        f"❌ {resource}… error!",
+                        f"Failed to apply: {config}",
+                        sep="\n",
+                    )
 
 
 def get_cmd_args(
@@ -125,8 +124,10 @@ def tilt_resource_template(kind: str) -> dict:
     }
 
 
-def generate_tilt_json(resource: str, context: str, arguments: list[str]) -> str:
-    """Generate the JSON needed to create a Cmd and UIButton via the Tilt API.
+def generate_tilt_json(
+    resource: str, context: str, arguments: list[str]
+) -> tuple[str, str]:
+    """Generate two JSON documents: One for the UIButton, and one for the Cmd.
 
     :param resource:
     :param context:
@@ -161,13 +162,7 @@ def generate_tilt_json(resource: str, context: str, arguments: list[str]) -> str
         "startOn": {"uiButtons": [btn_name]},
     }
 
-    resources = {
-        "apiVersion": "tilt.dev/v1alpha1",
-        "kind": "List",
-        "items": [uibutton, cmd],
-    }
-
-    return json.dumps(resources)
+    return json.dumps(uibutton), json.dumps(cmd)
 
 
 def run_controller(image: str, target: str, reqs_path: Path, compile_args: list[str]):
