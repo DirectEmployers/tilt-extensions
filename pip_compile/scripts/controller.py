@@ -59,14 +59,13 @@ def update_image_resources(
             spec = dockerimage["spec"]
             cmd_args = get_cmd_args(image, resource, target, reqs_path, compile_args)
             for config in generate_tilt_json(resource, spec["context"], cmd_args):
+                obj_name = config["metadata"]["name"]
                 try:
-                    tilt_apply(config)
+                    tilt_apply(json.dumps(config))
                 except subprocess.CalledProcessError:
-                    print(
-                        f"❌ {resource}… error!",
-                        f"Failed to apply: {config}",
-                        sep="\n",
-                    )
+                    print(f"❌ {obj_name}… error!\nFailed to apply: {config}")
+                else:
+                    print(f"✅ {obj_name}… success!")
 
 
 def get_cmd_args(
@@ -128,8 +127,8 @@ def generate_tilt_json(
     resource: str,
     context: str,
     arguments: list[str],
-) -> tuple[str, str]:
-    """Generate two JSON documents: One for the UIButton, and one for the Cmd.
+) -> tuple[dict, dict]:
+    """Generate two dictionaries: One for the UIButton, and one for the Cmd.
 
     :param resource:
     :param context:
@@ -164,7 +163,7 @@ def generate_tilt_json(
         },
     }
 
-    return json.dumps(uibutton), json.dumps(cmd)
+    return uibutton, cmd
 
 
 def run_controller(image: str, target: str, reqs_path: Path, compile_args: list[str]):
