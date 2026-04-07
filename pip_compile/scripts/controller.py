@@ -59,11 +59,14 @@ def update_image_resources(
             cmd_args = get_cmd_args(image, resource, target, reqs_path, compile_args)
             json_config = generate_tilt_json(resource, spec["context"], cmd_args)
 
-            process = tilt_apply(json_config)
-            if process.returncode == 0:
-                print(f"✅ {resource}… success!")
-            else:
-                print("❌ {resource}… error!", process.stdout, process.stderr, "")
+            try:
+                tilt_apply(json_config)
+            except subprocess.CalledProcessError:
+                print(
+                    f"❌ {resource}… error!",
+                    f"Failed to apply: {json_config}",
+                    sep="\n",
+                )
 
 
 def get_cmd_args(
@@ -104,9 +107,9 @@ def tilt_apply(json_config: str) -> subprocess.CompletedProcess:
     """
     return subprocess.run(
         ["tilt", "apply", "-f", "-"],
-        capture_output=True,
         input=json_config,
         text=True,
+        check=True
     )
 
 
