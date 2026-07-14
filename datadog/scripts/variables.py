@@ -12,7 +12,7 @@ ENABLE_SIGNAL = "Enable"
 DISABLE_SIGNAL = "Disable"
 
 K8S_CONFIGMAP_SESSIONS = "configmap/tilt-active-sessions"
-K8S_DEPLOYMENT_DATADOG = "deployment/datadog-cluster-agent"
+K8S_DEPLOYMENT_DATADOG = "deployment/datadog-agent-cluster-agent"
 
 TILT_UIBUTTON_TOGGLE_DATADOG_AGENT = "uibutton/de-remote:toggle-datadog-agent"
 TILT_UIRESOURCE_DATADOG_AGENT = "uiresource/datadog-agent"
