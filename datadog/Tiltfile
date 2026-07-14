@@ -178,14 +178,14 @@ def _stub_resource():
     deploy this resource stub as a stand-in to fulfill `resource_deps` references on
     Tilt resources which rely on it.
 
-    Tails logs from the Kubernetes `datadog-cluster-agent` deployment.
+    Tails logs from the Kubernetes `datadog-agent-cluster-agent` deployment.
     """
     local_resource(
         WORKLOAD_NAME,
         serve_cmd = [
             "kubectl",
             "logs",
-            "deployment/datadog-cluster-agent",
+            "deployment/datadog-agent-cluster-agent",
             "--follow=true",
             "--ignore-errors=false",
             "--pod-running-timeout=5m",
