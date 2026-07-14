@@ -18,7 +18,7 @@ BUTTON_NAME = "de-remote:toggle-datadog-agent"
 watch_settings(DD_USER_CONFIG_PATH)
 
 
-def datadog_up(agent_version = None):
+def datadog_up(agent_version = None, values_path = None):
     """Main function for this Tilt extension.
 
     Creates necessary resources for the Datadog Agent to run and be shared across
@@ -26,6 +26,7 @@ def datadog_up(agent_version = None):
 
     Args:
       agent_version (`str | None`): Set a specific version tag for Datadog Agent images.
+      values_path (`str | None`): Path to a values.yaml file to use instead of the one from the extension.
     """
     port = current_port()
     operator_port = which_sessions("uiresource", "datadog-operator")
@@ -45,7 +46,7 @@ def datadog_up(agent_version = None):
                 + " • Get Application Key: https://app.datadoghq.com/organization-settings/application-keys"
             )
 
-        _helm_resources(agent_version)
+        _helm_resources(agent_version, values_path)
     else:
         # Stub datadog-agent resource (for resource_deps compatibility)
         _stub_resource()
@@ -133,11 +134,12 @@ def _datadog_keys_secret():
     )
 
 
-def _helm_resources(agent_version = None):
+def _helm_resources(agent_version = None, values_path = None):
     """Create Tilt resources required to install Datadog Agent from Helm charts.
 
     Args:
       agent_version (`str | None`): Sets a specific image tag version for the Datadog Agent.
+      values_path (`str | None`): Path to a values.yaml file to use instead of the one from the extension.
     """
     release_name = "datadog-agent"
     helm_repo(
@@ -146,7 +148,7 @@ def _helm_resources(agent_version = None):
         labels = ["datadog"],
     )
 
-    chart_values = os.path.join(EXTENSION_PATH, "values.yaml")
+    chart_values = values_path or os.path.join(EXTENSION_PATH, "values.yaml")
     flags = ["--values", chart_values]
     if agent_version != None:
         flags.extend(["--set", "agents.image.tag=%s" % agent_version])
