@@ -9,6 +9,8 @@ set -eux
 BUILD_PATH="/.pip-requirements/build"
 MOUNT_PATH="/.pip-requirements/mount"
 
+pip install --upgrade 'pip==26.1' 'pip-tool==7.6.1'
+
 diffcp() {
   # Copy files only when their contents have changed (to prevent Tilt reload)
   if cmp -s "$1" "$2"; then
