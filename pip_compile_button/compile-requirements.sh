@@ -84,8 +84,9 @@ compile_in()
       python="$(command -v python3 || command -v python)"
       "${python}" -m venv "${venv}"
     fi
-    "${venv}/bin/pip" install --quiet --upgrade "pip==$2" "pip-tools==$3"
-  ' sh "${PIP_COMPILE_VENV}" "${PIP_VERSION}" "${PIP_TOOLS_VERSION}"; then
+    "${venv}/bin/pip" install --quiet --upgrade "pip==$2"
+    "${venv}/bin/pip" install --quiet --uploaded-prior-to "$4" --upgrade "pip-tools==$3"
+  ' sh "${PIP_COMPILE_VENV}" "${PIP_VERSION}" "${PIP_TOOLS_VERSION}" "${PIP_UPLOADED_PRIOR_TO}"; then
     echo "Failed to prepare pip-compile environment in container '${container}'." >&2
     echo "The image must provide Python with the venv module and a writable ${PIP_COMPILE_VENV%/*}" >&2
     echo "(override the location with PIP_COMPILE_VENV)." >&2
