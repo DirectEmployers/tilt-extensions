@@ -4,6 +4,7 @@ set -e
 
 POSITIONAL_ARGS=()
 COMPILE_ARGS=()
+: "${PIP_UPLOADED_PRIOR_TO:=P5D}"
 
 # Based on example from:
 # https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
@@ -77,7 +78,7 @@ compile_in()
 
     echo
     echo "Compiling ${input_name} → ${output_name}..."
-    kubectl exec "${exec_path}" -c "${container}" -- pip-compile ${compile_args[@]} "${input}"
+    kubectl exec "${exec_path}" -c "${container}" -- pip install --upgrade 'pip>=26.1' 'pip-tool=7.6.1' && pip-compile --uploaded-prior-to=${PIP_UPLOADED_PRIOR_TO} ${compile_args[@]} "${input}"
   done
 }
 

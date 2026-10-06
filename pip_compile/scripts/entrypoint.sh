@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+: "${PIP_UPLOADED_PRIOR_TO:=P5D}"
 #
 # Convenience functions used by the container, making compile, diff, and copy code reusable. Referenced in compiler.py.
 #
@@ -30,7 +31,7 @@ compile() {
   # Compile requirements
   for filepath in "$BUILD_PATH"/*.in; do
     requirements=$(basename "$filepath")
-    pip-compile $@ "$requirements"
+    pip-compile --uploaded-prior-to "${PIP_UPLOADED_PRIOR_TO}" $@ "$requirements"
   done
 
   set +x
