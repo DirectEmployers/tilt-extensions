@@ -68,7 +68,7 @@ compile_in()
         ;;
     esac
   done
-
+  kubectl exec "${exec_path}" -c "${container}" -- pip install --upgrade 'pip==26.1' 'pip-tools==7.6.1'
   for input in "${inputs[@]}"; do
     # Get filename only.
     input_name=$(basename $input)
@@ -78,7 +78,6 @@ compile_in()
 
     echo
     echo "Compiling ${input_name} → ${output_name}..."
-    kubectl exec "${exec_path}" -c "${container}" -- pip install --upgrade 'pip==26.1' 'pip-tools==7.6.1'
     kubectl exec "${exec_path}" -c "${container}" -- pip-compile --uploaded-prior-to="${PIP_UPLOADED_PRIOR_TO}" "${compile_args[@]}" "${input}"
   done
 }
