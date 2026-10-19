@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+: "${PIP_UPLOADED_PRIOR_TO:=P5D}"
 #
 # Convenience functions used by the container, making compile, diff, and copy code reusable. Referenced in compiler.py.
 #
@@ -7,6 +8,9 @@ set -eux
 
 BUILD_PATH="/.pip-requirements/build"
 MOUNT_PATH="/.pip-requirements/mount"
+
+pip install --upgrade 'pip==26.1'
+pip install --uploaded-prior-to "${PIP_UPLOADED_PRIOR_TO}" --upgrade 'pip-tools==7.6.1'
 
 diffcp() {
   # Copy files only when their contents have changed (to prevent Tilt reload)
@@ -30,7 +34,7 @@ compile() {
   # Compile requirements
   for filepath in "$BUILD_PATH"/*.in; do
     requirements=$(basename "$filepath")
-    pip-compile $@ "$requirements"
+    pip-compile --uploaded-prior-to "${PIP_UPLOADED_PRIOR_TO}" $@ "$requirements"
   done
 
   set +x
