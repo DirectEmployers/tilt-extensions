@@ -6,7 +6,7 @@ POSITIONAL_ARGS=()
 COMPILE_ARGS=()
 : "${PIP_UPLOADED_PRIOR_TO:=P5D}"
 : "${PIP_COMPILE_VENV:=/tmp/pip-compile-button-venv}"
-: "${PIP_VERSION:=26.1}"
+: "${PIP_VERSION:=26.2.2}"
 : "${PIP_TOOLS_VERSION:=7.6.1}"
 
 # Based on example from:
