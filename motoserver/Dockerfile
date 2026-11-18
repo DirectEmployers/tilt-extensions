@@ -1,4 +1,4 @@
-FROM motoserver/moto:5.0.19
+FROM motoserver/moto:5.2.5
 
 ENV AWS_ACCESS_KEY_ID="test" \
     AWS_SECRET_ACCESS_KEY="test" \
@@ -7,6 +7,7 @@ ENV AWS_ACCESS_KEY_ID="test" \
     AWS_DEFAULT_OUTPUT="json" \
     AWS_PAGER=""
 
+RUN apk add --no-cache aws-cli
 RUN pip --no-cache-dir install awscli-local[ver1]
 
 COPY main.py ./
